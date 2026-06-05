@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CAMPギア管理アプリ</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root {
+            --bg:#F0EAE0; --bg-card:#FFFDF7; --bg-header:#3D2C1E;
+            --text-primary:#2D1F14; --text-secondary:#6B5440; --text-muted:#9A876F;
+            --accent-brown:#7A5C38; --accent-khaki:#6B7A3A;
+            --border:#D4C4B0; --shadow:rgba(61,44,30,0.14);
+            --green-bg:#EBF5E1; --green-border:#A8C98A; --green-text:#3D6E1A;
+            --warn-bg:#FFF8E6; --warn-border:#E8C866; --warn-text:#7A5A0A;
+            --danger:#CC2A2A;
+        }
+        body {
+            font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif;
+            background:var(--bg); color:var(--text-primary);
+            max-width:430px; margin:0 auto; min-height:100vh; overflow-x:hidden;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background:var(--bg-header); color:white; padding:14px 16px;
+            display:flex; align-items:center; gap:8px;
+            position:sticky; top:0; z-index:200; box-shadow:0 2px 10px var(--shadow);
+        }
+        .header-back {
+            background:rgba(255,255,255,0.12); border:none; color:white;
+            font-size:20px; cursor:pointer; padding:6px 10px; border-radius:10px;
+            line-height:1; display:none;
+        }
+        .header-title { font-size:17px; font-weight:700; flex:1; letter-spacing:0.3px; }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
+            position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+            width:100%; max-width:430px; background:var(--bg-header);
+            display:flex; justify-content:space-around; align-items:flex-start;
+            padding:10px 0 calc(10px + env(safe-area-inset-bottom));
+            z-index:200; box-shadow:0 -2px 10px var(--shadow);
+        }
+        .nav-item {
+            display:flex; flex-direction:column; align-items:center; gap:4px;
+            cursor:pointer; color:rgba(255,255,255,0.5); padding:4px 10px;
+            border-radius:10px; min-width:60px;
+        }
+        .nav-item.active { color:#E8D5B0; }
+        .nav-icon { font-size:22px; line-height:1; }
+        .nav-label { font-size:10px; font-weight:600; white-space:nowrap; }
+
+        /* ===== SCREENS ===== */
+        .screen { display:none; padding:14px 14px 90px; }
+        .screen.active { display:block; animation:fadeIn 0.2s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ===== GENERIC CARD ===== */
+        .card {
+            background:var(--bg-card); border-radius:16px; padding:16px;
+            margin-bottom:12px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+        }
+
+        /* ===== HOME ===== */
+        .home-hero {
+            background:linear-gradient(135deg,#3D2C1E 0%,#7A6B4A 60%,#9A8B6A 100%);
+            border-radius:20px; padding:24px 20px 20px; margin-bottom:16px;
+            color:white; position:relative; overflow:hidden;
+        }
+        .home-hero::before {
+            content:"🏕️"; position:absolute; right:16px; bottom:8px;
+            font-size:70px; opacity:0.22; pointer-events:none;
+        }
+        .home-hero h1 { font-size:20px; font-weight:800; margin-bottom:5px; line-height:1.3; }
+        .home-hero p  { font-size:12px; opacity:0.8; }
+        .home-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+        .stat-card {
+            background:var(--bg-card); border-radius:14px; padding:14px 8px;
+            text-align:center; box-shadow:0 2px 6px var(--shadow); border:1px solid var(--border);
+        }
+        .stat-number { font-size:30px; font-weight:800; color:var(--accent-brown); line-height:1; }
+        .stat-label  { font-size:11px; color:var(--text-muted); margin-top:4px; }
+        .section-title { font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+        .quick-menu { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:20px; }
+        .quick-btn {
+            background:var(--bg-card); border-radius:16px; padding:18px 14px;
+            display:flex; flex-direction:column; gap:6px; cursor:pointer;
+            box-shadow:0 2px 6px var(--shadow); border:1px solid var(--border); transition:transform 0.1s;
+        }
+        .quick-btn:active { transform:scale(0.96); }
+        .quick-btn-icon { font-size:30px; line-height:1; }
+        .quick-btn-text { font-size:15px; font-weight:700; }
+        .quick-btn-sub  { font-size:11px; color:var(--text-muted); }
+
+        /* ===== GEAR LIST ===== */
+        .add-gear-btn {
+            width:100%; background:var(--bg-header); color:white; border:none;
+            border-radius:16px; padding:15px; font-size:16px; font-weight:800;
+            cursor:pointer; font-family:inherit; display:flex; align-items:center;
+            justify-content:center; gap:8px; margin-bottom:14px; transition:opacity 0.15s;
+        }
+        .add-gear-btn:active { opacity:0.85; }
+
+        .search-bar {
+            background:var(--bg-card); border:2px solid var(--border);
+            border-radius:14px; padding:12px 16px; width:100%;
+            font-size:15px; color:var(--text-primary); margin-bottom:12px;
+            outline:none; font-family:inherit;
+        }
+        .search-bar:focus { border-color:var(--accent-brown); }
+
+        .gear-filter {
+            display:flex; gap:8px; margin-bottom:14px;
+            overflow-x:auto; padding-bottom:4px; scrollbar-width:none;
+        }
+        .gear-filter::-webkit-scrollbar { display:none; }
+        .filter-btn {
+            background:var(--bg-card); border:2px solid var(--border);
+            border-radius:20px; padding:7px 14px; font-size:13px; font-weight:600;
+            color:var(--text-secondary); cursor:pointer; white-space:nowrap;
+            font-family:inherit; transition:all 0.15s;
+        }
+        .filter-btn.active { background:var(--bg-header); border-color:var(--bg-header); color:white; }
+
+        /* Standard gear card */
+        .gear-card {
+            background:var(--bg-card); border-radius:16px; padding:14px 16px;
+            margin-bottom:10px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+            display:flex; align-items:center; gap:14px;
+            cursor:pointer; transition:transform 0.1s;
+        }
+        .gear-card:active { transform:scale(0.98); }
+        .gear-emoji {
+            font-size:34px; min-width:52px; text-align:center;
+            background:var(--bg); border-radius:12px; padding:8px 6px; line-height:1.1;
+        }
+        .gear-info { flex:1; min-width:0; }
+        .gear-name  { font-size:15px; font-weight:700; margin-bottom:2px; }
+        .gear-maker { font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+        .tag {
+            display:inline-block; background:var(--bg); border:1px solid var(--border);
+            border-radius:6px; padding:2px 8px; font-size:11px; color:var(--text-secondary); font-weight:600;
+        }
+        .gear-storage { font-size:11px; color:var(--text-muted); margin-left:6px; }
+        .gear-card-actions { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
+        .gear-edit-btn {
+            background:var(--bg); border:1.5px solid var(--border); color:var(--text-muted);
+            font-size:15px; width:32px; height:32px; border-radius:8px;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:all 0.15s;
+        }
+        .gear-edit-btn:active { background:var(--border); }
+        .gear-arrow { color:var(--text-muted); font-size:20px; }
+
+        /* ===== TENT CARD ===== */
+        .tent-card {
+            background:var(--bg-card); border-radius:18px; overflow:hidden;
+            margin-bottom:12px; box-shadow:0 3px 12px var(--shadow); border:1px solid var(--border);
+            cursor:pointer; transition:transform 0.1s;
+        }
+        .tent-card:active { transform:scale(0.97); }
+        .tent-photo {
+            height:118px; display:flex; align-items:center; justify-content:center;
+            font-size:62px; line-height:1; position:relative;
+        }
+        .tent-photo-label {
+            position:absolute; top:10px; left:12px;
+            background:rgba(0,0,0,0.35); color:white; font-size:10px; font-weight:700;
+            padding:3px 8px; border-radius:6px; letter-spacing:0.3px;
+        }
+        .tent-photo-edit {
+            position:absolute; top:10px; right:12px;
+            background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.4);
+            color:white; font-size:14px; padding:4px 8px; border-radius:8px;
+            cursor:pointer; font-family:inherit; font-weight:600;
+        }
+        .tent-photo-edit:active { background:rgba(255,255,255,0.32); }
+        .tent-card-body { padding:14px; }
+        .tent-card-maker   { font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
+        .tent-card-name    { font-size:17px; font-weight:800; color:var(--text-primary); margin-bottom:5px; }
+        .tent-card-tagline { font-size:13px; color:var(--text-secondary); margin-bottom:11px; line-height:1.5; }
+        .tent-card-footer  { display:flex; justify-content:space-between; align-items:center; }
+        .tent-card-storage { font-size:12px; color:var(--text-muted); }
+        .tent-tags-row     { display:flex; flex-wrap:wrap; gap:5px; }
+        .tent-tag-pill { border-radius:8px; padding:3px 8px; font-size:10px; font-weight:700; white-space:nowrap; }
+
+        /* ===== COMPARISON ===== */
+        .comparison-card {
+            background:linear-gradient(135deg,#3D2C1E 0%,#7A6040 100%);
+            border-radius:18px; padding:18px; margin-bottom:14px; box-shadow:0 3px 12px var(--shadow);
+        }
+        .comparison-title    { font-size:18px; font-weight:800; color:white; margin-bottom:4px; }
+        .comparison-subtitle { font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:14px; }
+        .comp-tags-row       { display:flex; flex-wrap:wrap; gap:8px; }
+        .comp-tag {
+            background:rgba(255,255,255,0.14); border:1.5px solid rgba(255,255,255,0.35);
+            border-radius:20px; padding:7px 14px; font-size:13px; font-weight:600;
+            color:rgba(255,255,255,0.82); cursor:pointer; font-family:inherit; transition:all 0.2s; white-space:nowrap;
+        }
+        .comp-tag.active { background:rgba(255,255,255,0.93); color:#3D2C1E; border-color:white; }
+        .comp-match-count { font-size:12px; color:rgba(255,255,255,0.65); margin-top:10px; }
+
+        /* ===== GEAR DETAIL ===== */
+        .gear-detail-hero {
+            background:linear-gradient(135deg,#4A3525 0%,#8B7A5A 100%);
+            border-radius:20px; padding:22px 18px; margin-bottom:14px;
+            color:white; display:flex; align-items:center; gap:16px;
+        }
+        .gear-detail-emoji   { font-size:54px; line-height:1; }
+        .gear-detail-name    { font-size:20px; font-weight:800; margin-bottom:4px; }
+        .gear-detail-sub     { font-size:13px; opacity:0.8; }
+        .gear-detail-tagline { font-size:14px; opacity:0.85; margin-top:6px; line-height:1.5; }
+        .detail-section {
+            background:var(--bg-card); border-radius:16px; padding:16px;
+            margin-bottom:12px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+        }
+        .detail-section-title { font-size:14px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+
+        /* Tent stats */
+        .tent-stats-row { display:flex; gap:10px; margin-bottom:12px; }
+        .tent-stat-block {
+            flex:1; background:var(--bg-card); border-radius:14px; padding:14px 10px;
+            text-align:center; border:1px solid var(--border); box-shadow:0 2px 6px var(--shadow);
+        }
+        .tent-stat-label { font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:6px; }
+        .tent-stat-stars { font-size:20px; color:var(--accent-brown); letter-spacing:2px; }
+        .tent-stat-value { font-size:16px; font-weight:800; color:var(--accent-brown); }
+
+        .info-row {
+            display:flex; justify-content:space-between; align-items:baseline;
+            gap:12px; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;
+        }
+        .info-row:last-child { border-bottom:none; padding-bottom:0; }
+        .info-label { color:var(--text-muted); font-weight:600; flex-shrink:0; }
+        .info-value { color:var(--text-primary); font-weight:500; text-align:right; word-break:break-all; }
+
+        .step-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+        .step-item { display:flex; gap:12px; align-items:flex-start; }
+        .step-num {
+            min-width:28px; height:28px; background:var(--bg-header); color:white;
+            border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:13px; font-weight:700; flex-shrink:0;
+        }
+        .step-text { font-size:14px; line-height:1.65; padding-top:4px; }
+        .caution-box {
+            background:var(--warn-bg); border:1px solid var(--warn-border);
+            border-radius:12px; padding:14px; display:flex; gap:10px;
+        }
+        .caution-icon { font-size:18px; flex-shrink:0; }
+        .caution-text { font-size:13px; color:var(--warn-text); line-height:1.7; }
+        .video-note  { background:var(--bg); border-radius:12px; padding:14px; font-size:13px; color:var(--text-secondary); line-height:1.7; }
+        .features-text { font-size:14px; color:var(--text-primary); line-height:1.75; }
+
+        /* Detail action bar */
+        .detail-actions { display:flex; gap:10px; margin-bottom:20px; }
+        .btn-detail-edit {
+            flex:1; background:var(--bg-card); border:2px solid var(--border);
+            border-radius:14px; padding:14px; font-size:15px; font-weight:700;
+            color:var(--text-secondary); cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+        }
+        .btn-detail-edit:active { opacity:0.8; }
+        .btn-detail-delete {
+            background:var(--danger); color:white; border:none;
+            border-radius:14px; padding:14px 18px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+        }
+        .btn-detail-delete:active { opacity:0.8; }
+
+        /* ===== PDF LIST ===== */
+        .pdf-card {
+            background:var(--bg-card); border-radius:16px; padding:14px 16px; margin-bottom:10px;
+            box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+            display:flex; align-items:center; gap:14px;
+        }
+        .pdf-icon     { font-size:34px; min-width:40px; text-align:center; }
+        .pdf-info     { flex:1; min-width:0; }
+        .pdf-name     { font-size:14px; font-weight:700; margin-bottom:2px; }
+        .pdf-maker    { font-size:12px; color:var(--text-muted); }
+        .pdf-filename { font-size:11px; color:var(--text-muted); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .pdf-btn {
+            background:var(--bg-header); color:white; border:none; border-radius:10px;
+            padding:9px 14px; font-size:13px; font-weight:700; cursor:pointer;
+            font-family:inherit; flex-shrink:0;
+        }
+        .pdf-status-badge {
+            display:inline-block; border-radius:8px; padding:3px 9px;
+            font-size:11px; font-weight:700; margin-top:6px;
+        }
+        .pdf-status-badge.registered   { background:var(--green-bg); color:var(--green-text); border:1px solid var(--green-border); }
+        .pdf-status-badge.unregistered { background:#F0EDEA; color:var(--text-muted); border:1px solid var(--border); }
+        .pdf-count-row { display:flex; gap:10px; margin-bottom:14px; }
+        .pdf-count-block {
+            flex:1; background:var(--bg-card); border-radius:14px; padding:14px 10px;
+            text-align:center; box-shadow:0 2px 6px var(--shadow); border:1px solid var(--border);
+        }
+        .pdf-count-num   { font-size:26px; font-weight:800; line-height:1; }
+        .pdf-count-label { font-size:11px; color:var(--text-muted); margin-top:5px; }
+
+        /* ===== CHECKLIST ===== */
+        .check-progress { background:var(--bg-card); border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border); }
+        .progress-num   { font-size:32px; font-weight:800; color:var(--accent-khaki); line-height:1; }
+        .progress-sub   { font-size:13px; color:var(--text-muted); margin-top:3px; }
+        .progress-bar-bg { background:var(--bg); border-radius:8px; height:12px; margin:12px 0 0; overflow:hidden; }
+        .progress-bar    { background:linear-gradient(90deg,var(--accent-khaki),#8FBF5A); height:100%; border-radius:8px; transition:width 0.4s ease; }
+        .cat-header      { font-size:14px; font-weight:700; margin:16px 0 8px; display:flex; align-items:center; gap:6px; }
+        .check-item {
+            background:var(--bg-card); border-radius:12px; padding:13px 14px; margin-bottom:7px;
+            box-shadow:0 1px 4px var(--shadow); border:1.5px solid var(--border);
+            display:flex; align-items:center; gap:13px; cursor:pointer; transition:background 0.2s, border-color 0.2s;
+        }
+        .check-item.checked { background:var(--green-bg); border-color:var(--green-border); }
+        .check-box {
+            width:26px; height:26px; border-radius:7px; border:2px solid var(--border);
+            display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; transition:all 0.2s;
+        }
+        .check-item.checked .check-box { background:var(--accent-khaki); border-color:var(--accent-khaki); color:white; }
+        .check-text { font-size:15px; font-weight:600; }
+        .check-item.checked .check-text { text-decoration:line-through; color:var(--text-muted); }
+        .reset-btn {
+            background:var(--bg-card); border:2px solid var(--border); border-radius:14px;
+            padding:14px; width:100%; font-size:15px; font-weight:700;
+            color:var(--text-secondary); cursor:pointer; margin-top:8px; font-family:inherit;
+        }
+
+        /* ===== GARAGE ===== */
+        .map-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .map-cell { background:#D4C4B0; border-radius:12px; padding:12px 10px; text-align:center; cursor:pointer; transition:background 0.15s; }
+        .map-cell:active { background:#C4B090; }
+        .map-cell.full    { grid-column:1/-1; }
+        .map-cell-icon { font-size:18px; margin-bottom:4px; }
+        .map-cell-name { font-size:13px; font-weight:700; color:#3D2C1E; }
+        .map-cell-desc { font-size:10px; color:#7A6B4A; margin-top:2px; }
+
+        .garage-area { background:var(--bg-card); border-radius:16px; padding:16px; margin-bottom:10px; box-shadow:0 2px 8px var(--shadow); border:2px solid var(--border); cursor:pointer; transition:border-color 0.15s; }
+        .garage-area.expanded { border-color:var(--accent-brown); }
+        .area-header  { display:flex; justify-content:space-between; align-items:center; }
+        .area-title   { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:700; }
+        .area-icon    { font-size:22px; }
+        .area-desc    { font-size:12px; font-weight:400; color:var(--text-muted); margin-top:1px; }
+        .area-badge   { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:3px 10px; font-size:12px; color:var(--text-muted); font-weight:600; }
+        .area-chevron { transition:transform 0.2s; color:var(--text-muted); font-size:18px; margin-left:6px; }
+        .garage-area.expanded .area-chevron { transform:rotate(90deg); }
+        .area-items   { display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); flex-direction:column; gap:8px; }
+        .garage-area.expanded .area-items { display:flex; }
+        .area-item    { display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--bg); border-radius:12px; cursor:pointer; transition:background 0.1s; }
+        .area-item:active { background:var(--border); }
+        .area-item-emoji { font-size:22px; }
+        .area-item-name  { font-size:14px; font-weight:700; }
+        .area-item-meta  { font-size:12px; color:var(--text-muted); }
+        .area-item-arrow { color:var(--text-muted); font-size:16px; margin-left:auto; }
+
+        /* ===== GEAR EDIT FORM ===== */
+        .form-section {
+            background:var(--bg-card); border-radius:16px; padding:18px;
+            margin-bottom:12px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+        }
+        .form-section-title { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:14px; }
+        .form-field { margin-bottom:16px; }
+        .form-field:last-child { margin-bottom:0; }
+        .form-label { display:block; font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:7px; }
+        .form-label .req { color:var(--danger); }
+        .form-hint  { font-size:11px; color:var(--text-muted); margin-top:5px; line-height:1.5; }
+        .form-input {
+            width:100%; background:var(--bg); border:2px solid var(--border);
+            border-radius:12px; padding:13px 14px; font-size:15px; color:var(--text-primary);
+            font-family:inherit; outline:none; transition:border-color 0.2s;
+        }
+        .form-input:focus { border-color:var(--accent-brown); }
+        textarea.form-input { resize:none; line-height:1.65; }
+        .form-select {
+            width:100%; background:var(--bg); border:2px solid var(--border);
+            border-radius:12px; padding:13px 14px; font-size:15px; color:var(--text-primary);
+            font-family:inherit; outline:none; appearance:none;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%239A876F' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat:no-repeat; background-position:right 12px center;
+            padding-right:40px; transition:border-color 0.2s;
+        }
+        .form-select:focus { border-color:var(--accent-brown); }
+
+        /* Emoji presets */
+        .emoji-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .emoji-input-wrap { display:flex; gap:8px; margin-bottom:10px; }
+        .emoji-preset {
+            font-size:22px; padding:6px 8px; background:var(--bg);
+            border:1.5px solid var(--border); border-radius:8px; cursor:pointer;
+            line-height:1; transition:background 0.1s;
+        }
+        .emoji-preset:active { background:var(--border); }
+
+        /* Difficulty stars */
+        .diff-stars-row { display:flex; gap:4px; }
+        .diff-star {
+            font-size:32px; cursor:pointer; line-height:1; background:none; border:none;
+            opacity:0.25; transition:opacity 0.15s, transform 0.1s; padding:2px;
+        }
+        .diff-star.active { opacity:1; }
+        .diff-star:active { transform:scale(1.2); }
+
+        /* Tent tag checkboxes */
+        .tag-check-grid { display:flex; flex-wrap:wrap; gap:8px; }
+        .tag-check-item {
+            display:flex; align-items:center; gap:6px;
+            background:var(--bg); border:2px solid var(--border);
+            border-radius:20px; padding:7px 12px; cursor:pointer;
+            font-size:13px; font-weight:600; color:var(--text-secondary); transition:all 0.15s;
+        }
+        .tag-check-item.on { background:var(--bg-header); border-color:var(--bg-header); color:white; }
+
+        /* Gradient presets */
+        .gradient-presets { display:flex; gap:8px; flex-wrap:wrap; }
+        .gradient-preset {
+            width:40px; height:40px; border-radius:10px; cursor:pointer;
+            border:3px solid transparent; transition:border-color 0.15s, transform 0.1s;
+        }
+        .gradient-preset.on { border-color:var(--text-primary); transform:scale(1.1); }
+
+        /* Form action bar */
+        .form-actions {
+            position:sticky; bottom:0; background:var(--bg);
+            padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+            border-top:1px solid var(--border); display:flex; gap:10px; z-index:100;
+        }
+        .btn-form-cancel {
+            background:var(--bg-card); color:var(--text-secondary); border:2px solid var(--border);
+            border-radius:14px; padding:15px 20px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+        }
+        .btn-form-cancel:active { opacity:0.8; }
+        .btn-form-save {
+            flex:1; background:var(--bg-header); color:white; border:none;
+            border-radius:14px; padding:15px; font-size:16px; font-weight:800;
+            cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+        }
+        .btn-form-save:active { opacity:0.8; }
+        .btn-form-delete {
+            width:100%; background:var(--danger); color:white; border:none;
+            border-radius:14px; padding:15px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; margin-bottom:12px; transition:opacity 0.15s;
+        }
+        .btn-form-delete:active { opacity:0.8; }
+
+        /* Reset link */
+        .reset-demo-btn {
+            background:none; border:none; color:var(--text-muted);
+            font-size:13px; cursor:pointer; font-family:inherit;
+            text-decoration:underline; padding:6px; display:block; margin:0 auto;
+        }
+        .reset-demo-btn:active { opacity:0.7; }
+
+        /* Demo banner */
+        .demo-banner {
+            background:var(--green-bg); border:1px solid var(--green-border);
+            border-radius:12px; padding:12px 14px; margin-bottom:14px;
+            display:flex; gap:10px; align-items:flex-start;
+        }
+        .demo-banner-text { font-size:12px; color:var(--green-text); line-height:1.6; }
+
+        /* Toast */
+        #toast {
+            position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+            background:rgba(61,44,30,0.92); color:white; padding:12px 22px;
+            border-radius:24px; font-size:14px; font-weight:600; z-index:999;
+            opacity:0; transition:opacity 0.25s, transform 0.25s;
+            max-width:300px; text-align:center; pointer-events:none;
+        }
+        #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <button class="header-back" id="back-btn" onclick="goBack()">←</button>
+    <span class="header-title" id="header-title">🏕️ CAMPギア管理</span>
+</div>
+
+<!-- ==============================  HOME  ============================== -->
+<div class="screen active" id="screen-home">
+    <div class="home-hero">
+        <h1>CAMPギア管理アプリ</h1>
+        <p>ギアの管理・取説・チェックをまとめて確認</p>
+    </div>
+    <div class="home-stats">
+        <div class="stat-card">
+            <div class="stat-number" id="home-gear-count">—</div>
+            <div class="stat-label">登録ギア</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="home-pdf-count">—</div>
+            <div class="stat-label">取扱説明書</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="home-checked">0</div>
+            <div class="stat-label">チェック済</div>
+        </div>
+    </div>
+    <div class="section-title">🔧 クイックメニュー</div>
+    <div class="quick-menu">
+        <div class="quick-btn" onclick="navTo('gear-list')">
+            <div class="quick-btn-icon">🎒</div>
+            <div class="quick-btn-text">ギア一覧</div>
+            <div class="quick-btn-sub" id="qm-gear-sub">読み込み中…</div>
+        </div>
+        <div class="quick-btn" onclick="navTo('checklist')">
+            <div class="quick-btn-icon">✅</div>
+            <div class="quick-btn-text">持ち物チェック</div>
+            <div class="quick-btn-sub">出発前に確認</div>
+        </div>
+        <div class="quick-btn" onclick="navTo('pdf-list')">
+            <div class="quick-btn-icon">📄</div>
+            <div class="quick-btn-text">取説・PDF</div>
+            <div class="quick-btn-sub" id="qm-pdf-sub">読み込み中…</div>
+        </div>
+        <div class="quick-btn" onclick="navTo('garage')">
+            <div class="quick-btn-icon">🏠</div>
+            <div class="quick-btn-text">収納マップ</div>
+            <div class="quick-btn-sub">ガレージ管理</div>
+        </div>
+    </div>
+    <div class="section-title">⛺ テント一覧</div>
+    <div id="home-tents"></div>
+</div>
+
+<!-- ==============================  GEAR LIST  ============================== -->
+<div class="screen" id="screen-gear-list">
+    <button class="add-gear-btn" onclick="showAddGear()">
+        <span style="font-size:22px;">＋</span> ギアを追加する
+    </button>
+    <input class="search-bar" type="text" placeholder="🔍 ギア名・メーカーで検索…" id="gear-search" oninput="renderGearList()">
+    <div class="gear-filter" id="filter-bar"></div>
+
+    <!-- テント比較セクション -->
+    <div id="comparison-section" style="display:none;">
+        <div class="comparison-card">
+            <div class="comparison-title">🏕️ どのテントを持っていく？</div>
+            <div class="comparison-subtitle">今日のキャンプスタイルで選ぼう</div>
+            <div class="comp-tags-row">
+                <button class="comp-tag" data-tag="solo"     onclick="toggleCompTag(this)">👤 ソロ向き</button>
+                <button class="comp-tag" data-tag="duo"      onclick="toggleCompTag(this)">👥 デュオ向き</button>
+                <button class="comp-tag" data-tag="family"   onclick="toggleCompTag(this)">👨‍👩‍👧 ファミリー向き</button>
+                <button class="comp-tag" data-tag="easy"     onclick="toggleCompTag(this)">⚡ 設営が楽</button>
+                <button class="comp-tag" data-tag="campfire" onclick="toggleCompTag(this)">🔥 焚き火向き</button>
+                <button class="comp-tag" data-tag="cozy"     onclick="toggleCompTag(this)">🏠 おこもり向き</button>
+            </div>
+            <div class="comp-match-count" id="comp-match-count"></div>
+        </div>
+    </div>
+
+    <div id="gear-list-items"></div>
+
+    <div style="text-align:center; padding:24px 0 8px;">
+        <button class="reset-demo-btn" onclick="resetToDefaults()">🔄 デモデータに戻す</button>
+    </div>
+</div>
+
+<!-- ==============================  GEAR DETAIL  ============================== -->
+<div class="screen" id="screen-gear-detail">
+    <div id="gear-detail-content"></div>
+</div>
+
+<!-- ==============================  GEAR EDIT / ADD  ============================== -->
+<div class="screen" id="screen-gear-edit" style="padding-bottom:0;">
+    <div id="gear-form-body" style="padding:14px 14px 0;"></div>
+    <div class="form-actions">
+        <button class="btn-form-cancel" onclick="cancelEdit()">キャンセル</button>
+        <button class="btn-form-save"   onclick="submitGearForm()">💾 保存する</button>
+    </div>
+</div>
+
+<!-- ==============================  PDF LIST  ============================== -->
+<div class="screen" id="screen-pdf-list">
+    <div id="pdf-count-summary"></div>
+    <div class="gear-filter" id="pdf-filter-bar"></div>
+    <div id="pdf-list-items"></div>
+</div>
+
+<!-- ==============================  CHECKLIST  ============================== -->
+<div class="screen" id="screen-checklist">
+    <div class="check-progress">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div class="progress-num" id="check-pct">0%</div>
+                <div class="progress-sub" id="check-sub">0 / 0 チェック済</div>
+            </div>
+            <div style="font-size:52px;line-height:1;">🎒</div>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar" id="progress-fill" style="width:0%"></div>
+        </div>
+    </div>
+    <div id="checklist-items"></div>
+    <button class="reset-btn" onclick="resetChecklist()">🔄 チェックをリセット</button>
+</div>
+
+<!-- ==============================  GARAGE MAP  ============================== -->
+<div class="screen" id="screen-garage">
+    <div class="card" style="background:linear-gradient(135deg,#3D2C1E,#7A6B4A);color:white;border:none;margin-bottom:14px;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:5px;">🏠 ガレージ収納マップ</div>
+        <div style="font-size:13px;opacity:0.85;">エリアをタップすると収納中のギアが表示されます</div>
+    </div>
+    <div class="card" style="margin-bottom:14px;" id="garage-map-visual"></div>
+    <div id="garage-areas"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+    <div class="nav-item active" id="nav-home"      onclick="navTo('home')">      <span class="nav-icon">🏕️</span><span class="nav-label">ホーム</span>   </div>
+    <div class="nav-item"        id="nav-gear-list"  onclick="navTo('gear-list')"> <span class="nav-icon">🎒</span><span class="nav-label">ギア</span>    </div>
+    <div class="nav-item"        id="nav-checklist"  onclick="navTo('checklist')"> <span class="nav-icon">✅</span><span class="nav-label">チェック</span></div>
+    <div class="nav-item"        id="nav-pdf-list"   onclick="navTo('pdf-list')">  <span class="nav-icon">📄</span><span class="nav-label">取説</span>    </div>
+    <div class="nav-item"        id="nav-garage"     onclick="navTo('garage')">    <span class="nav-icon">🏠</span><span class="nav-label">収納</span>    </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="public/manuals/manuals.js"></script>
+<script>
+'use strict';
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const STORAGE_KEY = 'camp_gears_app_v1';
+
+const TENT_TAG_DEF = {
+    solo:     { label:'👤 ソロ向き',      color:'#C4723A', bg:'#FFF0E6' },
+    duo:      { label:'👥 デュオ向き',    color:'#3A8B8B', bg:'#E2F5F5' },
+    family:   { label:'👨‍👩‍👧 ファミリー', color:'#4A6B9B', bg:'#E4EEF8' },
+    easy:     { label:'⚡ 設営が楽',      color:'#5A8B5A', bg:'#E4F4E4' },
+    campfire: { label:'🔥 焚き火向き',    color:'#B85A28', bg:'#FFF0E6' },
+    cozy:     { label:'🏠 おこもり',      color:'#7A5A9B', bg:'#F0EAF8' },
+};
+
+const CAT_ICONS = {
+    'テント':'⛺','タープ':'🏕️','焚き火台':'🔥','ランタン':'💡',
+    'バーナー':'🔥','調理器具':'🍳','クーラー':'🧊','寝袋・マット':'🛌',
+    '収納':'📦','その他ギア':'📋','その他':'📋',
+};
+
+const CATEGORIES = ['テント','タープ','焚き火台','ランタン','バーナー','調理器具','クーラー','寝袋・マット','収納','その他ギア'];
+
+const GRADIENT_PRESETS = [
+    { name:'ウォームブラウン', value:'linear-gradient(135deg,#8B6B4A,#4A2E18)' },
+    { name:'フォレストグリーン', value:'linear-gradient(135deg,#4A7A3A,#2A4A20)' },
+    { name:'オリーブカーキ', value:'linear-gradient(135deg,#5A5A38,#2E2E18)' },
+    { name:'スカイブルー', value:'linear-gradient(135deg,#5A8BBB,#2A5A8A)' },
+    { name:'アースブラウン', value:'linear-gradient(135deg,#8B6A3A,#4A2E12)' },
+    { name:'サンドベージュ', value:'linear-gradient(135deg,#8B7A5A,#5A4A30)' },
+    { name:'ダークオリーブ', value:'linear-gradient(135deg,#5A6A3A,#2E3A1E)' },
+    { name:'スレート', value:'linear-gradient(135deg,#4A5A7A,#2A3050)' },
+];
+
+const GARAGE_LOCATION_MAP = [
+    { key:'棚A',         id:'shelf-a',    icon:'🗄️', name:'棚A',         desc:'上段・下段' },
+    { key:'棚B',         id:'shelf-b',    icon:'🗄️', name:'棚B',         desc:'中段・下段' },
+    { key:'右奥',        id:'right-back', icon:'📦', name:'右奥',         desc:'大型・重量物' },
+    { key:'左壁',        id:'left-wall',  icon:'🪝', name:'左壁側',       desc:'壁掛け・フック' },
+    { key:'床置き',      id:'floor',      icon:'🧺', name:'床置きエリア', desc:'大型・ランタン類' },
+];
+
+const CHECKLIST = [
+    { cat:'⛺ テント・シェルター', items:['テンマクデザイン サーカスS','Snow Peak ヴォールト','TOMOUNT パップテント（軍幕TC）','雑貨の国のアリス ワンタッチドーム','DesertFox ロッジ型テント','ペグ・ハンマー','グランドシート','タープ・ポール'] },
+    { cat:'🛌 寝具', items:['モンベル ダウンハガー800','インフレータブルマット','枕','毛布（冬季）'] },
+    { cat:'🍳 調理・食事', items:['SOTOレギュレーターストーブ','CB缶ガス（予備含む3本）','クッカー・鍋','箸・スプーン・フォーク','まな板・包丁','ゴミ袋','食材・調味料'] },
+    { cat:'💡 照明', items:['Goal Zero ライトハウスマイクロ','ランタン（メイン）','予備電池・モバイルバッテリー'] },
+    { cat:'🔥 焚き火', items:['スノーピーク 焚き火台M','焚き火シート','薪（現地調達 or 持参）','着火剤・ライター','革手袋','トング・火ばさみ'] },
+    { cat:'📦 収納・テーブル', items:['ユニフレーム フィールドラック','ローチェア','テーブル','ランタンスタンド'] },
+    { cat:'🧊 飲料・食材', items:['YETIクーラーボックス','氷（袋氷）','飲料水','食材（1日分）','お酒・飲み物'] },
+    { cat:'🧹 清掃・撤収', items:['ほうき・チリトリ','ウェットシート','ゴミ袋（分別用）','ロープ・ガイライン予備'] },
+];
+
+// ============================================================
+// DEFAULT GEARS
+// ============================================================
+const DEFAULT_GEARS = [
+    { id:'t0', name:'サーカスS', maker:'テンマクデザイン', category:'テント', tentType:'ワンポールテント', emoji:'⛺',
+      tagline:'ワンポールの雰囲気系ソロテント',
+      features:'とんがり形でソロキャン向き。焚き火や静かなキャンプに合うロマン系テント。雰囲気と機能を両立した一張り。',
+      setupDifficulty:3, recommendedPeople:'1人（ソロ）', tentTags:['solo','campfire'],
+      photoGradient:'linear-gradient(135deg,#8B6B4A,#4A2E18)', storage:'棚A',
+      storageMethod:'収納袋にロール状にまとめ、棚Aに立てて保管。ポールは専用ケースに入れて横に。',
+      pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf', video:'YouTube: "テンマクデザイン サーカスS 設営" で検索',
+      setup:['グランドシートを広げ、テント本体を上に置く','全てのペグループを外に広げ、仮ペグで固定する（6か所）','テント中央にポールを立て、グロメットにポール先端を合わせる','ポールを伸ばしてテントを立ち上げる','形を整えながら全ペグを本固定する','ガイラインを6方向に張り、テンションを整えて完成'],
+      takedown:['ガイラインを全て外す','ポールをゆっくり縮めてテントを降ろす','全ペグを回収する（6本確認）','内部の結露や汚れを拭き取る','テントを折りたたみ収納袋に入れる','帰宅後に必ず乾燥させてから保管'],
+      caution:'ペグは必ず6本以上打つこと。強風時はガイラインを必ず張る。ポールが中央にあるため移動動線に注意。', specs:{タイプ:'ワンポールテント',収納場所:'棚A'} },
+
+    { id:'t1', name:'ヴォールト', maker:'Snow Peak', category:'テント', tentType:'ドームテント', emoji:'🏕️',
+      tagline:'王道ドーム型テント',
+      features:'バランス型。初心者にも使いやすく、安定感と安心感が高い。デュオ〜ファミリーまで幅広く対応できる頼れる一張り。',
+      setupDifficulty:2, recommendedPeople:'2〜4人', tentTags:['duo','family'],
+      photoGradient:'linear-gradient(135deg,#4A7A3A,#2A4A20)', storage:'棚B',
+      storageMethod:'テント本体・フライシートをたたみ、ポールと一緒に収納袋へ。棚Bの下段に収納。',
+      pdf:'SnowPeak_Vault_manual.pdf', video:'YouTube: "スノーピーク ヴォールト 設営" で検索',
+      setup:['インナーテントをフラットに広げ、入口方向を確認する','二本のメインポールをスリーブに通す（赤・黒で色分け）','X字に交差させながらテントを立ち上げる','四隅をペグで固定する（8本）','フライシートをかぶせ、バックルを留める','前後のペグ・ガイラインを張って完成'],
+      takedown:['ガイラインとペグを全て外す（8本確認）','フライシートを外し、水気を拭いて乾かす','ポールをスリーブから抜き取る','インナーテントを折りたたむ','全パーツを収納袋にまとめる','帰宅後は必ず乾燥させてから保管する'],
+      caution:'ポールスリーブへの差し込みはゆっくり丁寧に。ペグは8本全て打ち込むこと。帰宅後は必ず乾燥させてから保管。', specs:{タイプ:'ドームテント',収納場所:'棚B'} },
+
+    { id:'t2', name:'パップテント（軍幕TC）', maker:'TOMOUNT', category:'テント', tentType:'パップテント', emoji:'🪖',
+      tagline:'軍幕系の無骨ソロテント',
+      features:'ミリタリー感が強く、焚き火や無骨キャンプ向き。TC素材で雰囲気重視。炎を近くで楽しみたいキャンプに最適。',
+      setupDifficulty:3, recommendedPeople:'1〜2人', tentTags:['solo','campfire'],
+      photoGradient:'linear-gradient(135deg,#5A5A38,#2E2E18)', storage:'右奥',
+      storageMethod:'TC素材は完全乾燥が必須。ロールして専用袋に収め、右奥の棚に立てて保管。',
+      pdf:'TOMOUNT_PupTent_TC_manual.pdf', video:'YouTube: "TOMOUNT パップテント TC 設営" で検索',
+      setup:['グランドシートを広げテント本体を展開する','前後ポール2本を立て上げる（高さを好みで調整可能）','前面・後面・サイドのペグを打ち込む（8〜10本）','ガイラインをテンションよく張る','前室部分のポールとペグで前幕を設置する','高さや開口角度は好みで調整して完成'],
+      takedown:['前室の幕とポールを外す','ガイラインとペグを全て回収する','前後のポールをゆっくり倒す','テント本体をコンパクトにロールする','TC素材は必ず完全に乾いてから収納する（カビ防止）'],
+      caution:'TC素材は濡れたまま収納すると必ずカビが発生する。完全乾燥が必須。重量があるため2人での設営を推奨。', specs:{タイプ:'パップテント',素材:'TC（テクニカルコットン）',収納場所:'右奥'} },
+
+    { id:'t3', name:'ワンタッチドームテント', maker:'雑貨の国のアリス', category:'テント', tentType:'ワンタッチテント', emoji:'🎪',
+      tagline:'設営ラクなファミリー系テント',
+      features:'ワンタッチで簡単設営。気軽キャンプや人数多め向き。子連れや設営が苦手な方にも安心の一張り。',
+      setupDifficulty:1, recommendedPeople:'2〜5人', tentTags:['easy','family'],
+      photoGradient:'linear-gradient(135deg,#5A8BBB,#2A5A8A)', storage:'左壁側',
+      storageMethod:'8の字に折りたたんで収納袋へ。袋が縦長なので左壁側に立てかけて保管。',
+      pdf:'AliceZakka_OneTouchDome_manual.pdf', video:'YouTube: "ワンタッチテント 設営 折り畳み方" で検索',
+      setup:['収納袋からテントを取り出し固定バンドを外す','地面に置いて広げる','骨組みが自動展開するのを確認する（ワンタッチ！）','形を整えてペグで四隅を固定する（4〜6本）','フライシートをかぶせてバックルを留める'],
+      takedown:['フライシートを外す','ペグを全て外す（4〜6本確認）','テントを上から押さえながら8の字に折りたたむ','収納袋に押し込む（折りたたみ方向を合わせる）'],
+      caution:'自動展開時に周囲の安全を確認してから広げる。8の字折りたたみの方向を誤ると収納袋に入らないので注意。', specs:{タイプ:'ワンタッチテント',収納場所:'左壁側'} },
+
+    { id:'t4', name:'ロッジ型広空間テント', maker:'DesertFox', category:'テント', tentType:'ロッジ型テント', emoji:'🏠',
+      tagline:'部屋みたいに過ごせる広空間テント',
+      features:'高さと広さがあり、中でくつろぐおこもりキャンプ向き。雨天でも快適に過ごせる居住性の高い大型テント。',
+      setupDifficulty:4, recommendedPeople:'2〜6人', tentTags:['family','cozy'],
+      photoGradient:'linear-gradient(135deg,#8B6A3A,#4A2E12)', storage:'床置きエリア',
+      storageMethod:'大きな収納袋に本体・フレームをまとめて入れる。重量があるため床置きエリアに平置き保管。',
+      pdf:'DesertFox_LodgeTent_manual.pdf', video:'YouTube: "DesertFox ロッジ型テント 設営" で検索',
+      setup:['パーツを確認し、グランドシートを広げる','フレームを組み立て各所に差し込む','テント本体を広げてフレームに固定する','全ペグを打ち込みテントを立ち上げる（12本以上）','フライシートをかぶせてフレームに固定する','ガイラインで風対策をして完成（設営目安：30〜45分）'],
+      takedown:['フライシートを外す','ガイライン・全ペグを回収する','フレームをテントから外しバラす','テント本体を折りたたむ','大きな収納袋に全パーツをまとめる（2人推奨）'],
+      caution:'設営・撤収に時間がかかるため2人以上で行うこと。フレーム接続部は確実に固定する。大型で重量があるため運搬に注意。', specs:{タイプ:'ロッジ型テント',収納場所:'床置きエリア'} },
+
+    { id:'g5', name:'焚き火台 M', maker:'Snow Peak', category:'焚き火台', emoji:'🔥', storage:'左壁側（フック掛け）',
+      storageMethod:'収納ケースにたたんでまとめ、左壁側のフックに掛けて保管。',
+      pdf:'SnowPeak_Takibi_M_manual.pdf', video:'YouTube: "スノーピーク 焚き火台M 組み立て" で検索',
+      setup:['収納ケースから各パーツ（ボウル・脚・底板）を取り出す','四本の脚を広げて地面に置く','ボウル部分を脚の上にセットする','芝生・木製デッキでは焚き火シートを必ず下に敷く','着火剤と薪を用意してから着火する'],
+      takedown:['火が完全に消えるまで待つ（または水で消火）','灰が冷めたら灰捨て袋に入れて持ち帰る','本体が冷えたら汚れをブラシで落とす','脚を折りたたみ、ボウルをたたんでケースに収納'],
+      caution:'芝生の上では必ず焚き火シートを使用すること。灰は指定場所に処理。高温になるため子どもの接近に注意。',
+      specs:{サイズ:'35×35×H25cm',収納サイズ:'37×31×6.5cm',重量:'2.5kg',素材:'ステンレス'} },
+
+    { id:'g6', name:'ライトハウスマイクロ フラッシュ', maker:'Goal Zero', category:'ランタン', emoji:'💡', storage:'床置きエリア（ボックス内）',
+      storageMethod:'床置きエリアのボックスに入れて保管。帰宅後は充電してから収納。',
+      pdf:'GoalZero_Lighthouse_Micro_manual.pdf', video:'YouTube: "Goal Zero Lighthouse Micro Flash" で検索',
+      setup:['出発前にmicro USBで充電しておく（最大10時間）','ボタンを押して点灯（押すたびに輝度が3段階で変わる）','長押しで赤色灯モードに切り替え','テント内は吊り下げフック、テーブル上はスタンドで使用'],
+      takedown:['長押しで電源オフ','汚れが付いたら柔らかい布で拭く','帰宅後はUSBで充電して保管（完全放電での保管は避ける）'],
+      caution:'直射日光の当たる場所での長期保管は避ける。完全放電状態での長期保管は電池劣化の原因になる。',
+      specs:{最大輝度:'250ルーメン',連続使用時間:'最大40時間',重量:'155g',防水:'IPX4'} },
+
+    { id:'g7', name:'レギュレーターストーブ ST-310', maker:'SOTO', category:'調理器具', emoji:'🍳', storage:'棚B（中段）',
+      storageMethod:'専用ケースに入れ、棚Bの中段に保管。',
+      pdf:'SOTO_ST310_manual.pdf', video:'YouTube: "SOTO ST-310 使い方" で検索',
+      setup:['CB缶ガスカートリッジを用意する','五徳を開いてロックする','バルブをOFFにした状態でCB缶を接続する','バルブを少し開いてガスを出す','別途用意したライターで点火する（本体に点火装置なし）','炎の大きさを調整して調理開始'],
+      takedown:['調理終了後はバルブを完全に閉めて消火する','本体が十分冷えてからガスカートリッジを外す','五徳を折りたたむ','ケースに入れて保管'],
+      caution:'テント内や密閉空間での使用は一酸化炭素中毒の危険があり厳禁。使用後はバルブが確実に閉まっているか必ず確認。',
+      specs:{発熱量:'2.9kW（2500kcal/h）',使用ガス:'CB缶',重量:'73g（本体のみ）'} },
+
+    { id:'g8', name:'フィールドラック', maker:'Uniflame', category:'収納', emoji:'📦', storage:'棚B（下段）',
+      storageMethod:'収納袋に折りたたんで棚Bの下段に保管。',
+      pdf:'Uniflame_FieldRack_manual.pdf', video:'YouTube: "ユニフレーム フィールドラック" で検索',
+      setup:['収納袋から取り出す','四本の脚を広げてロックする','ラック面が水平になっているか確認','複数枚を重ねて使用する場合は脚をかみ合わせる'],
+      takedown:['乗せているものを全て降ろす','脚を折りたたむ','収納袋に入れる'],
+      caution:'耐荷重は1枚あたり30kg。重いものを乗せる際は必ず平坦な場所で使用。',
+      specs:{使用時サイズ:'600×350×H250mm',重量:'1.2kg',耐荷重:'30kg',素材:'ステンレス'} },
+
+    { id:'g9', name:'ダウンハガー800 #3', maker:'mont-bell', category:'寝袋・マット', emoji:'🛌', storage:'床置きエリア（専用ボックス）',
+      storageMethod:'自宅では収納袋から出してルーズバッグで保管。床置きエリアの専用ボックスへ。',
+      pdf:'montbell_DownHugger800_3_manual.pdf', video:'YouTube: "モンベル ダウンハガー 収納方法" で検索',
+      setup:['収納袋からシュラフを取り出す（押しつぶさず引き出す）','ジッパーを全開にして広げる','マット上に置いて使用','寒い場合は付属ドローコードで顔周りを絞る'],
+      takedown:['ジッパーを全開にして内側を乾燥させる','汚れがあれば40度以下のぬるま湯で手洗い','足元から丸めて収納袋に押し込む','長期保存時は収納袋から出してルーズバッグで保管する'],
+      caution:'収納袋への長期保管は羽毛を傷めるため、自宅では収納袋から出して保管すること。洗濯は必ずダウン専用洗剤を使用。',
+      specs:{快適睡眠温度:'7℃',使用下限温度:'2℃',重量:'650g',素材:'800フィルパワーダウン'} },
+
+    { id:'g10', name:'ローディーカット 60', maker:'YETI', category:'クーラー', emoji:'🧊', storage:'右奥（床置き）',
+      storageMethod:'右奥に平置き保管。使用前に必ず内部を確認。',
+      pdf:'YETI_RoadieCut60_manual.pdf', video:'YouTube: "YETI ローディーカット 使い方" で検索',
+      setup:['出発前日から空の状態で事前冷却する','氷は底面に敷き詰める（氷:食材 = 2:1）','食材は密閉袋に入れてから収納する','開閉は最小限にして保冷効率を保つ'],
+      takedown:['残った水を排水プラグから抜く','食材を全て取り出す','内部を水洗いして汚れを落とす','蓋を開けた状態でよく乾燥させてから保管'],
+      caution:'空でも約14kgと重いため移動時は必ず2人で運ぶこと。生肉は密閉袋に二重包装。ドレインプラグは積み込み前に確実に閉める。',
+      specs:{容量:'60L',外寸:'W68×D38×H42cm',重量:'約14kg（空時）',保冷日数:'最大10日'} },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let gears         = [];
+let filterCat     = 'all';
+let pdfFilterCat  = 'all';
+const compTags    = new Set();
+const checkState  = {};
+let editingId     = null; // null = new gear
+
+// ============================================================
+// STORAGE
+// ============================================================
+function loadGears() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_GEARS));
+}
+
+function saveGears() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gears));
+}
+
+function generateId() {
+    return 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2,5);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function starsHTML(n, max=5) {
+    return '★'.repeat(n) + '<span style="opacity:0.22;">★</span>'.repeat(max-n);
+}
+
+function tentTagPills(tags) {
+    if (!tags || !tags.length) return '';
+    return tags.map(t => {
+        const d = TENT_TAG_DEF[t]; if (!d) return '';
+        return `<span class="tent-tag-pill" style="background:${d.bg};color:${d.color};">${d.label}</span>`;
+    }).join('');
+}
+
+function esc(s) {
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function textareaToSteps(text) {
+    return (text||'').split('\n').map(s=>s.trim()).filter(s=>s.length>0);
+}
+
+function stepsToTextarea(steps) {
+    return (steps||[]).join('\n');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const SCREEN_META = {
+    'home':        { title:'🏕️ CAMPギア管理',      nav:'nav-home',      back:false },
+    'gear-list':   { title:'🎒 ギア一覧',           nav:'nav-gear-list', back:false },
+    'gear-detail': { title:'🔍 ギア詳細',           nav:'nav-gear-list', back:true  },
+    'gear-edit':   { title:'✏️ ギアを編集',         nav:'nav-gear-list', back:true  },
+    'pdf-list':    { title:'📄 取説・PDFリスト',    nav:'nav-pdf-list',  back:false },
+    'checklist':   { title:'✅ 持ち物チェック',      nav:'nav-checklist', back:false },
+    'garage':      { title:'🏠 ガレージ収納マップ', nav:'nav-garage',    back:false },
+};
+let historyStack = [];
+let currentScreen = 'home';
+
+function navTo(name) {
+    historyStack = [];
+    compTags.clear();
+    document.querySelectorAll('.comp-tag').forEach(b=>b.classList.remove('active'));
+    _activate(name);
+}
+
+function pushScreen(name) {
+    historyStack.push(currentScreen);
+    _activate(name);
+}
+
+function goBack() {
+    const prev = historyStack.pop() || 'gear-list';
+    _activate(prev);
+}
+
+function _activate(name) {
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-'+name).classList.add('active');
+    currentScreen = name;
+    const meta = SCREEN_META[name];
+    document.getElementById('header-title').textContent = meta.title;
+    document.getElementById('back-btn').style.display = meta.back ? 'block' : 'none';
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById(meta.nav).classList.add('active');
+    window.scrollTo(0,0);
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function buildHome() {
+    const tents = gears.filter(g=>g.category==='テント');
+    document.getElementById('home-tents').innerHTML = tents.map(g=>tentCardHTML(g)).join('') ||
+        '<div class="card" style="text-align:center;color:var(--text-muted);padding:30px;">テントが登録されていません</div>';
+}
+
+function updateHomeStats() {
+    const n        = gears.length;
+    const pdfCount = gears.filter(g => !!getPDFPath(g)).length;
+    document.getElementById('home-gear-count').textContent = n;
+    document.getElementById('home-pdf-count').textContent  = pdfCount;
+    document.getElementById('qm-gear-sub').textContent     = n + '点登録中';
+    document.getElementById('qm-pdf-sub').textContent      = pdfCount + '冊登録済み';
+}
+
+// ============================================================
+// GEAR LIST
+// ============================================================
+function rebuildFilterBar() {
+    const cats = [...new Set(gears.map(g=>g.category).filter(Boolean))].sort();
+    const fb = document.getElementById('filter-bar');
+    const activeCat = filterCat;
+    fb.innerHTML = `<button class="filter-btn${activeCat==='all'?' active':''}" data-cat="all" onclick="setFilter(this,this.dataset.cat)">すべて</button>` +
+        cats.map(c=>`<button class="filter-btn${activeCat===c?' active':''}" data-cat="${esc(c)}" onclick="setFilter(this,this.dataset.cat)">${CAT_ICONS[c]||'📋'} ${esc(c)}</button>`).join('');
+}
+
+function setFilter(btn, cat) {
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    filterCat = cat;
+    if (cat !== 'テント') {
+        compTags.clear();
+        document.querySelectorAll('.comp-tag').forEach(b=>b.classList.remove('active'));
+    }
+    document.getElementById('comparison-section').style.display = cat==='テント' ? 'block' : 'none';
+    renderGearList();
+}
+
+function toggleCompTag(btn) {
+    const tag = btn.dataset.tag;
+    if (compTags.has(tag)) { compTags.delete(tag); btn.classList.remove('active'); }
+    else                   { compTags.add(tag);    btn.classList.add('active'); }
+    renderGearList();
+}
+
+function renderGearList() {
+    const search = (document.getElementById('gear-search').value||'').trim();
+    let filtered = gears.filter(g=>{
+        const matchCat    = filterCat==='all' || g.category===filterCat;
+        const matchSearch = !search || (g.name||'').includes(search) || (g.maker||'').includes(search);
+        return matchCat && matchSearch;
+    });
+    if (filterCat==='テント' && compTags.size>0) {
+        filtered = filtered.filter(g=>g.tentTags && g.tentTags.some(t=>compTags.has(t)));
+    }
+    const countEl = document.getElementById('comp-match-count');
+    if (filterCat==='テント' && compTags.size>0) countEl.textContent = filtered.length+'件のテントがマッチしました';
+    else countEl.textContent = '';
+
+    const container = document.getElementById('gear-list-items');
+    if (!filtered.length) {
+        container.innerHTML = '<div class="card" style="text-align:center;color:var(--text-muted);padding:40px 16px;">該当するギアがありません</div>';
+        return;
+    }
+    container.innerHTML = filtered.map(g => g.category==='テント' ? tentCardHTML(g) : gearCardHTML(g)).join('');
+}
+
+function tentCardHTML(g) {
+    return `
+    <div class="tent-card" onclick="showGearDetail('${g.id}')">
+        <div class="tent-photo" style="background:${g.photoGradient||'linear-gradient(135deg,#8B6B4A,#4A2E18)'};">
+            <div style="filter:drop-shadow(0 3px 8px rgba(0,0,0,0.35));font-size:62px;line-height:1;">${esc(g.emoji||'⛺')}</div>
+            <div class="tent-photo-label">${esc(g.tentType||'テント')}</div>
+            <button class="tent-photo-edit" onclick="event.stopPropagation();showEditGear('${g.id}')">✏️ 編集</button>
+        </div>
+        <div class="tent-card-body">
+            <div class="tent-card-maker">${esc(g.maker)}</div>
+            <div class="tent-card-name">${esc(g.name)}</div>
+            <div class="tent-card-tagline">${esc(g.tagline||'')}</div>
+            <div class="tent-card-footer">
+                <span class="tent-card-storage">📍 ${esc(g.storage)}</span>
+                <div class="tent-tags-row">${tentTagPills(g.tentTags)}</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function gearCardHTML(g) {
+    return `
+    <div class="gear-card" onclick="showGearDetail('${g.id}')">
+        <div class="gear-emoji">${esc(g.emoji||'📦')}</div>
+        <div class="gear-info">
+            <div class="gear-name">${esc(g.name)}</div>
+            <div class="gear-maker">${esc(g.maker)}</div>
+            <span class="tag">${esc(g.category)}</span>
+            <span class="gear-storage">📍 ${esc(g.storage)}</span>
+        </div>
+        <div class="gear-card-actions">
+            <button class="gear-edit-btn" onclick="event.stopPropagation();showEditGear('${g.id}')" title="編集">✏️</button>
+            <span class="gear-arrow">›</span>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// GEAR DETAIL
+// ============================================================
+function showGearDetail(id) {
+    const g = gears.find(x=>x.id===id); if(!g) return;
+    historyStack.push(currentScreen);
+    document.getElementById('gear-detail-content').innerHTML =
+        g.category==='テント' ? buildTentDetail(g) : buildStandardDetail(g);
+    _activate('gear-detail');
+}
+
+function buildTentDetail(g) {
+    const specs = Object.entries(g.specs||{}).map(([k,v])=>`<div class="info-row"><span class="info-label">${esc(k)}</span><span class="info-value">${esc(v)}</span></div>`).join('');
+    const steps = (arr,bg) => (arr||[]).map((s,i)=>`<li class="step-item"><span class="step-num" style="background:${bg};">${i+1}</span><span class="step-text">${esc(s)}</span></li>`).join('');
+    return `
+        <div class="gear-detail-hero" style="background:${g.photoGradient||'linear-gradient(135deg,#4A3525,#8B7A5A)'};">
+            <div class="gear-detail-emoji">${esc(g.emoji||'⛺')}</div>
+            <div>
+                <div style="font-size:11px;opacity:0.75;font-weight:700;letter-spacing:0.4px;margin-bottom:3px;">${esc((g.maker||'').toUpperCase())}</div>
+                <div class="gear-detail-name">${esc(g.name)}</div>
+                <div class="gear-detail-sub">${esc(g.tentType||'')}</div>
+                ${g.tagline?`<div class="gear-detail-tagline">${esc(g.tagline)}</div>`:''}
+            </div>
+        </div>
+        <div class="detail-actions">
+            <button class="btn-detail-edit"   onclick="showEditGear('${g.id}')">✏️ 編集する</button>
+            <button class="btn-detail-delete" onclick="confirmDeleteGear('${g.id}')">🗑️ 削除</button>
+        </div>
+        <div class="tent-stats-row">
+            <div class="tent-stat-block">
+                <div class="tent-stat-label">設営難易度</div>
+                <div class="tent-stat-stars" style="color:var(--accent-brown);">${starsHTML(g.setupDifficulty||1)}</div>
+            </div>
+            <div class="tent-stat-block">
+                <div class="tent-stat-label">おすすめ人数</div>
+                <div class="tent-stat-value">👤 ${esc(g.recommendedPeople||'—')}</div>
+            </div>
+        </div>
+        ${g.features?`<div class="detail-section"><div class="detail-section-title">✨ 特徴</div><div class="features-text">${esc(g.features)}</div><div style="margin-top:12px;">${tentTagPills(g.tentTags)}</div></div>`:''}
+        ${(g.setup||[]).length?`<div class="detail-section"><div class="detail-section-title">⬆️ 設営手順</div><ul class="step-list">${steps(g.setup,'#3D2C1E')}</ul></div>`:''}
+        ${(g.takedown||[]).length?`<div class="detail-section"><div class="detail-section-title">⬇️ 撤収手順</div><ul class="step-list">${steps(g.takedown,'#5C4A35')}</ul></div>`:''}
+        ${g.storageMethod?`<div class="detail-section"><div class="detail-section-title">📦 収納方法</div><div class="video-note">${esc(g.storageMethod)}</div></div>`:''}
+        ${g.caution?`<div class="detail-section"><div class="detail-section-title">⚠️ 注意点</div><div class="caution-box"><span class="caution-icon">⚠️</span><span class="caution-text">${esc(g.caution)}</span></div></div>`:''}
+        <div class="detail-section">
+            <div class="detail-section-title">📋 基本情報</div>
+            <div class="info-row"><span class="info-label">収納場所</span><span class="info-value">📍 ${esc(g.storage)}</span></div>
+            ${pdfRowHTML(g)}
+            ${specs}
+        </div>
+        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${esc(g.video)}</div></div>`:''}
+    `;
+}
+
+function buildStandardDetail(g) {
+    const specs = Object.entries(g.specs||{}).map(([k,v])=>`<div class="info-row"><span class="info-label">${esc(k)}</span><span class="info-value">${esc(v)}</span></div>`).join('');
+    const steps = (arr,bg) => (arr||[]).map((s,i)=>`<li class="step-item"><span class="step-num" style="background:${bg};">${i+1}</span><span class="step-text">${esc(s)}</span></li>`).join('');
+    return `
+        <div class="gear-detail-hero">
+            <div class="gear-detail-emoji">${esc(g.emoji||'📦')}</div>
+            <div>
+                <div class="gear-detail-name">${esc(g.name)}</div>
+                <div class="gear-detail-sub">${esc(g.maker)}　・　${esc(g.category)}</div>
+            </div>
+        </div>
+        <div class="detail-actions">
+            <button class="btn-detail-edit"   onclick="showEditGear('${g.id}')">✏️ 編集する</button>
+            <button class="btn-detail-delete" onclick="confirmDeleteGear('${g.id}')">🗑️ 削除</button>
+        </div>
+        ${g.tagline?`<div class="detail-section"><div class="detail-section-title">💬 説明</div><div class="features-text">${esc(g.tagline)}</div></div>`:''}
+        <div class="detail-section">
+            <div class="detail-section-title">📋 基本情報</div>
+            <div class="info-row"><span class="info-label">収納場所</span><span class="info-value">📍 ${esc(g.storage)}</span></div>
+            ${pdfRowHTML(g)}
+            ${specs}
+        </div>
+        ${(g.setup||[]).length?`<div class="detail-section"><div class="detail-section-title">⬆️ 設営・使用手順</div><ul class="step-list">${steps(g.setup,'#3D2C1E')}</ul></div>`:''}
+        ${(g.takedown||[]).length?`<div class="detail-section"><div class="detail-section-title">⬇️ 撤収・片付け手順</div><ul class="step-list">${steps(g.takedown,'#5C4A35')}</ul></div>`:''}
+        ${g.storageMethod?`<div class="detail-section"><div class="detail-section-title">📦 収納方法</div><div class="video-note">${esc(g.storageMethod)}</div></div>`:''}
+        ${g.caution?`<div class="detail-section"><div class="detail-section-title">⚠️ 注意点</div><div class="caution-box"><span class="caution-icon">⚠️</span><span class="caution-text">${esc(g.caution)}</span></div></div>`:''}
+        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${esc(g.video)}</div></div>`:''}
+    `;
+}
+
+// ============================================================
+// GEAR DELETE
+// ============================================================
+function confirmDeleteGear(id) {
+    const g = gears.find(x=>x.id===id); if(!g) return;
+    if (!confirm(`「${g.name}」を削除しますか？\n\nこの操作は元に戻せません。`)) return;
+    gears = gears.filter(x=>x.id!==id);
+    saveGears();
+    showToast('削除しました');
+    rebuildFilterBar();
+    renderGearList();
+    buildHome();
+    buildPDFList();
+    buildGarageMap();
+    updateHomeStats();
+    goBack();
+}
+
+// ============================================================
+// GEAR EDIT / ADD FORM
+// ============================================================
+function showAddGear() {
+    editingId = null;
+    buildGearForm(null);
+    document.getElementById('header-title').textContent = '＋ ギアを追加';
+    pushScreen('gear-edit');
+}
+
+function showEditGear(id) {
+    const g = gears.find(x=>x.id===id);
+    editingId = id;
+    buildGearForm(g);
+    pushScreen('gear-edit');
+}
+
+function cancelEdit() {
+    goBack();
+}
+
+function buildGearForm(g) {
+    const isTent = g ? g.category==='テント' : false;
+    const selGradient = g ? (g.photoGradient||GRADIENT_PRESETS[0].value) : GRADIENT_PRESETS[0].value;
+    const selDiff     = g ? (g.setupDifficulty||3) : 3;
+    const selTags     = g ? (g.tentTags||[]) : [];
+
+    // Build gradient preset circles
+    const gradientHTML = GRADIENT_PRESETS.map((p,i)=>`
+        <div class="gradient-preset${p.value===selGradient?' on':''}" id="gp-${i}"
+             style="background:${p.value};" title="${p.name}"
+             onclick="selectGradient(${i})"></div>`).join('');
+
+    // Build diff stars
+    const diffStarsHTML = [1,2,3,4,5].map(n=>`
+        <button type="button" class="diff-star${n<=selDiff?' active':''}" id="ds-${n}"
+                onclick="selectDiff(${n})">★</button>`).join('');
+
+    // Build tag checkboxes
+    const tagCheckHTML = Object.entries(TENT_TAG_DEF).map(([k,d])=>`
+        <div class="tag-check-item${selTags.includes(k)?' on':''}" id="tc-${k}"
+             onclick="toggleTagCheck('${k}')">
+            ${d.label}
+        </div>`).join('');
+
+    // Category options
+    const catOptions = CATEGORIES.map(c=>`<option value="${esc(c)}"${(g&&g.category===c)?' selected':''}>${CAT_ICONS[c]||''} ${esc(c)}</option>`).join('');
+
+    // Emoji presets
+    const EMOJIS = ['⛺','🏕️','🔥','💡','🍳','🛌','📦','🧊','🪖','🎪','🏠','🪓','🗡️','🧲','🔦','🧯','🛶','🏔️'];
+    const emojiPresets = EMOJIS.map(e=>`<button type="button" class="emoji-preset" onclick="setEmoji('${e}')">${e}</button>`).join('');
+
+    document.getElementById('gear-form-body').innerHTML = `
+        <!-- 基本情報 -->
+        <div class="form-section">
+            <div class="form-section-title">📋 基本情報</div>
+            <div class="form-field">
+                <label class="form-label" for="f-name">ギア名 <span class="req">*</span></label>
+                <input class="form-input" type="text" id="f-name" placeholder="例：サーカスS" value="${esc(g?g.name:'')}">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-maker">メーカー名</label>
+                <input class="form-input" type="text" id="f-maker" placeholder="例：テンマクデザイン" value="${esc(g?g.maker:'')}">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-category">カテゴリ <span class="req">*</span></label>
+                <select class="form-select" id="f-category" onchange="onCategoryChange()">${catOptions}</select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">アイコン（絵文字）</label>
+                <div class="emoji-input-wrap">
+                    <input class="form-input" type="text" id="f-emoji" value="${esc(g?g.emoji:'⛺')}" style="width:80px;text-align:center;font-size:24px;" maxlength="4">
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">${emojiPresets}</div>
+            </div>
+        </div>
+
+        <!-- テント専用 -->
+        <div class="form-section" id="f-tent-section" style="display:${isTent?'block':'none'};">
+            <div class="form-section-title">⛺ テント詳細</div>
+            <div class="form-field">
+                <label class="form-label" for="f-tent-type">テントタイプ</label>
+                <input class="form-input" type="text" id="f-tent-type" placeholder="例：ワンポールテント" value="${esc(g?g.tentType:'')}">
+            </div>
+            <div class="form-field">
+                <label class="form-label">設営難易度</label>
+                <div class="diff-stars-row" id="f-diff-row">${diffStarsHTML}</div>
+                <input type="hidden" id="f-difficulty" value="${selDiff}">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-people">おすすめ人数</label>
+                <input class="form-input" type="text" id="f-people" placeholder="例：1人（ソロ）" value="${esc(g?g.recommendedPeople:'')}">
+            </div>
+            <div class="form-field">
+                <label class="form-label">カードの背景色</label>
+                <div class="gradient-presets">${gradientHTML}</div>
+                <input type="hidden" id="f-gradient" value="${esc(selGradient)}">
+            </div>
+            <div class="form-field">
+                <label class="form-label">タグ（複数選択可）</label>
+                <div class="tag-check-grid">${tagCheckHTML}</div>
+            </div>
+        </div>
+
+        <!-- 説明・収納 -->
+        <div class="form-section">
+            <div class="form-section-title">💬 説明・収納</div>
+            <div class="form-field">
+                <label class="form-label" for="f-tagline">一言説明</label>
+                <input class="form-input" type="text" id="f-tagline" placeholder="例：ワンポールの雰囲気系ソロテント" value="${esc(g?g.tagline:'')}">
+            </div>
+            <div class="form-field" id="f-features-field" style="display:${isTent?'block':'none'};">
+                <label class="form-label" for="f-features">特徴（テント）</label>
+                <textarea class="form-input" id="f-features" rows="3" placeholder="このテントの特徴・使い所を入力…">${esc(g?g.features:'')}</textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-storage">収納場所</label>
+                <input class="form-input" type="text" id="f-storage" placeholder="例：棚A（上段）" value="${esc(g?g.storage:'')}">
+                <div class="form-hint">棚A / 棚B / 右奥 / 左壁側 / 床置きエリア を含めると収納マップに反映されます</div>
+            </div>
+        </div>
+
+        <!-- 手順・注意 -->
+        <div class="form-section">
+            <div class="form-section-title">📝 手順・注意点</div>
+            <div class="form-field">
+                <label class="form-label" for="f-setup">設営・使用手順</label>
+                <textarea class="form-input" id="f-setup" rows="5" placeholder="1行＝1手順で入力してください…">${esc(stepsToTextarea(g?g.setup:[]))}</textarea>
+                <div class="form-hint">1行＝1手順。Enterで改行</div>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-takedown">撤収・片付け手順</label>
+                <textarea class="form-input" id="f-takedown" rows="4" placeholder="1行＝1手順で入力してください…">${esc(stepsToTextarea(g?g.takedown:[]))}</textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-storage-method">収納方法</label>
+                <textarea class="form-input" id="f-storage-method" rows="2" placeholder="収納袋への入れ方や保管の詳細を入力…">${esc(g?g.storageMethod:'')}</textarea>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-caution">注意点</label>
+                <textarea class="form-input" id="f-caution" rows="3" placeholder="使用時の注意点を入力…">${esc(g?g.caution:'')}</textarea>
+            </div>
+        </div>
+
+        <!-- 参照 -->
+        <div class="form-section">
+            <div class="form-section-title">📎 参照</div>
+            <div class="form-field">
+                <label class="form-label" for="f-pdf">取説PDF名</label>
+                <input class="form-input" type="text" id="f-pdf" placeholder="例：SnowPeak_Vault_manual.pdf" value="${esc(g?g.pdf:'')}">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-video">動画URLメモ</label>
+                <input class="form-input" type="text" id="f-video" placeholder="例：YouTube: ヴォールト 設営 で検索" value="${esc(g?g.video:'')}">
+            </div>
+        </div>
+
+        ${editingId ? `
+        <div style="margin-bottom:10px;">
+            <button class="btn-form-delete" onclick="deleteGearFromForm()">
+                🗑️ このギアを削除する
+            </button>
+        </div>` : ''}
+
+        <div style="height:20px;"></div>
+    `;
+}
+
+function onCategoryChange() {
+    const cat = document.getElementById('f-category').value;
+    const isTent = cat === 'テント';
+    document.getElementById('f-tent-section').style.display   = isTent ? 'block' : 'none';
+    document.getElementById('f-features-field').style.display = isTent ? 'block' : 'none';
+}
+
+function setEmoji(e) {
+    document.getElementById('f-emoji').value = e;
+}
+
+function selectDiff(n) {
+    document.getElementById('f-difficulty').value = n;
+    for (let i=1;i<=5;i++) {
+        document.getElementById('ds-'+i).classList.toggle('active', i<=n);
+    }
+}
+
+function selectGradient(idx) {
+    document.getElementById('f-gradient').value = GRADIENT_PRESETS[idx].value;
+    document.querySelectorAll('.gradient-preset').forEach((el,i)=>el.classList.toggle('on', i===idx));
+}
+
+function toggleTagCheck(key) {
+    const el = document.getElementById('tc-'+key);
+    el.classList.toggle('on');
+}
+
+function getSelectedTentTags() {
+    return Object.keys(TENT_TAG_DEF).filter(k=>{
+        const el = document.getElementById('tc-'+k);
+        return el && el.classList.contains('on');
+    });
+}
+
+function submitGearForm() {
+    const name     = (document.getElementById('f-name').value||'').trim();
+    const category = document.getElementById('f-category').value;
+    if (!name) { alert('ギア名を入力してください'); return; }
+    if (!category) { alert('カテゴリを選択してください'); return; }
+
+    const isTent = category === 'テント';
+    const original = editingId ? gears.find(x=>x.id===editingId) : null;
+
+    const data = {
+        id:       editingId || generateId(),
+        name,
+        maker:          (document.getElementById('f-maker').value||'').trim(),
+        category,
+        emoji:          (document.getElementById('f-emoji').value||'📦').trim(),
+        tagline:        (document.getElementById('f-tagline').value||'').trim(),
+        storage:        (document.getElementById('f-storage').value||'').trim(),
+        setup:          textareaToSteps(document.getElementById('f-setup').value),
+        takedown:       textareaToSteps(document.getElementById('f-takedown').value),
+        storageMethod:  (document.getElementById('f-storage-method').value||'').trim(),
+        caution:        (document.getElementById('f-caution').value||'').trim(),
+        pdf:            (document.getElementById('f-pdf').value||'').trim(),
+        video:          (document.getElementById('f-video').value||'').trim(),
+        specs:          original ? (original.specs||{}) : {},
+    };
+
+    if (isTent) {
+        data.tentType         = (document.getElementById('f-tent-type').value||'').trim();
+        data.features         = (document.getElementById('f-features').value||'').trim();
+        data.setupDifficulty  = parseInt(document.getElementById('f-difficulty').value)||3;
+        data.recommendedPeople= (document.getElementById('f-people').value||'').trim();
+        data.photoGradient    = document.getElementById('f-gradient').value;
+        data.tentTags         = getSelectedTentTags();
+    }
+
+    if (editingId) {
+        const idx = gears.findIndex(x=>x.id===editingId);
+        if (idx!==-1) gears[idx] = data;
+    } else {
+        gears.push(data);
+    }
+
+    saveGears();
+    showToast(editingId ? '保存しました ✓' : 'ギアを追加しました ✓');
+    rebuildFilterBar();
+    renderGearList();
+    buildHome();
+    buildPDFList();
+    buildGarageMap();
+    updateHomeStats();
+    cancelEdit();
+}
+
+function deleteGearFromForm() {
+    if (!editingId) return;
+    const g = gears.find(x=>x.id===editingId);
+    if (!g) return;
+    if (!confirm(`「${g.name}」を削除しますか？\n\nこの操作は元に戻せません。`)) return;
+    gears = gears.filter(x=>x.id!==editingId);
+    saveGears();
+    showToast('削除しました');
+    rebuildFilterBar();
+    renderGearList();
+    buildHome();
+    buildPDFList();
+    buildGarageMap();
+    updateHomeStats();
+    // Go back two levels (edit form -> detail/list)
+    historyStack.pop();
+    goBack();
+}
+
+// ============================================================
+// RESET TO DEFAULTS
+// ============================================================
+function resetToDefaults() {
+    if (!confirm('全てのデータをデモデータに戻しますか？\n\n追加・編集・削除した内容は全て失われます。\nこの操作は元に戻せません。')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    gears = JSON.parse(JSON.stringify(DEFAULT_GEARS));
+    saveGears();
+    filterCat = 'all';
+    compTags.clear();
+    rebuildFilterBar();
+    renderGearList();
+    buildHome();
+    buildPDFList();
+    buildGarageMap();
+    updateHomeStats();
+    showToast('デモデータに戻しました');
+}
+
+// ============================================================
+// PDF LIST
+// ============================================================
+function openPDF(path) {
+    window.open(path, '_blank', 'noopener');
+}
+
+// manuals.js の MANUALS_REGISTRY を参照して PDF パスを返す。
+// なければギアデータの pdfPath にフォールバック。
+function getPDFPath(g) {
+    if (typeof MANUALS_REGISTRY !== 'undefined' && MANUALS_REGISTRY[g.id]) {
+        return MANUALS_REGISTRY[g.id].path;
+    }
+    return g.pdfPath || null;
+}
+
+// ギア詳細画面の「取扱説明書」行
+function pdfRowHTML(g) {
+    const path = getPDFPath(g);
+    if (!path && !g.pdf) return '';
+    if (path) {
+        return `<div class="info-row" style="cursor:pointer;" onclick="openPDF('${path}')">` +
+               `<span class="info-label">取扱説明書</span>` +
+               `<span class="info-value" style="color:var(--accent-brown);text-decoration:underline;">` +
+               `📗 ${esc(g.pdf || '取扱説明書を開く')}</span></div>`;
+    }
+    return `<div class="info-row"><span class="info-label">取扱説明書</span>` +
+           `<span class="info-value" style="color:var(--text-muted);font-style:italic;">📋 未登録</span></div>`;
+}
+
+// ============================================================
+// PDF LIST
+// ============================================================
+function setPDFFilter(btn, cat) {
+    pdfFilterCat = cat;
+    document.querySelectorAll('#pdf-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPDFList();
+}
+
+function buildPDFList() {
+    // フィルターバーを動的に構築（ギアのカテゴリから生成）
+    const cats = [...new Set(gears.map(g => g.category).filter(Boolean))].sort();
+    document.getElementById('pdf-filter-bar').innerHTML =
+        `<button class="filter-btn${pdfFilterCat==='all'?' active':''}" onclick="setPDFFilter(this,'all')">すべて</button>` +
+        cats.map(c =>
+            `<button class="filter-btn${pdfFilterCat===c?' active':''}" onclick="setPDFFilter(this,'${c.replace(/'/g,'\\\'')}')">${CAT_ICONS[c]||'📋'} ${esc(c)}</button>`
+        ).join('');
+    renderPDFList();
+}
+
+function renderPDFList() {
+    const filtered = pdfFilterCat === 'all' ? gears : gears.filter(g => g.category === pdfFilterCat);
+    const registeredCount   = filtered.filter(g => !!getPDFPath(g)).length;
+    const unregisteredCount = filtered.length - registeredCount;
+
+    // 件数サマリー
+    document.getElementById('pdf-count-summary').innerHTML = `
+        <div class="pdf-count-row">
+            <div class="pdf-count-block">
+                <div class="pdf-count-num" style="color:var(--green-text);">${registeredCount}</div>
+                <div class="pdf-count-label">📗 登録済み</div>
+            </div>
+            <div class="pdf-count-block">
+                <div class="pdf-count-num" style="color:var(--text-muted);">${unregisteredCount}</div>
+                <div class="pdf-count-label">📋 未登録</div>
+            </div>
+        </div>`;
+
+    // PDFカード一覧
+    document.getElementById('pdf-list-items').innerHTML = filtered.map(g => {
+        const pdfPath = getPDFPath(g);
+        const hasPdf  = !!pdfPath;
+        const badge   = hasPdf
+            ? `<span class="pdf-status-badge registered">✓ PDF登録済み</span>`
+            : `<span class="pdf-status-badge unregistered">取扱説明書未登録</span>`;
+        const btn = hasPdf
+            ? `<button class="pdf-btn" onclick="event.stopPropagation();openPDF('${pdfPath}')">開く</button>`
+            : `<button class="pdf-btn" style="opacity:0.35;cursor:default;" disabled>未登録</button>`;
+        return `
+        <div class="pdf-card" onclick="${hasPdf ? `openPDF('${pdfPath}')` : ''}" style="${hasPdf ? 'cursor:pointer;' : ''}">
+            <div class="pdf-icon">${hasPdf ? '📗' : '📋'}</div>
+            <div class="pdf-info">
+                <div class="pdf-name">${esc(g.name)}</div>
+                <div class="pdf-maker">${esc(g.maker)}　・　${esc(g.category)}</div>
+                ${badge}
+            </div>
+            ${btn}
+        </div>`;
+    }).join('') || '<div class="card" style="text-align:center;color:var(--text-muted);padding:40px 16px;">該当するギアがありません</div>';
+}
+
+// ============================================================
+// CHECKLIST
+// ============================================================
+function buildChecklist() {
+    document.getElementById('checklist-items').innerHTML = CHECKLIST.map((cat,ci)=>`
+        <div>
+            <div class="cat-header">${cat.cat}</div>
+            ${cat.items.map((item,ii)=>{
+                const key     = `${ci}-${ii}`;
+                const checked = !!checkState[key];
+                return `<div class="check-item${checked?' checked':''}" id="ci-${key}" onclick="toggleCheck('${key}')">
+                    <div class="check-box">${checked?'✓':''}</div>
+                    <span class="check-text">${esc(item)}</span>
+                </div>`;
+            }).join('')}
+        </div>`).join('');
+    updateProgress();
+}
+
+function toggleCheck(key) {
+    checkState[key] = !checkState[key];
+    const el      = document.getElementById('ci-'+key);
+    const checked = checkState[key];
+    el.classList.toggle('checked', checked);
+    el.querySelector('.check-box').textContent = checked ? '✓' : '';
+    updateProgress();
+}
+
+function updateProgress() {
+    let total=0, done=0;
+    CHECKLIST.forEach((cat,ci)=>{ cat.items.forEach((_,ii)=>{ total++; if(checkState[`${ci}-${ii}`]) done++; }); });
+    const pct = total ? Math.round((done/total)*100) : 0;
+    document.getElementById('check-pct').textContent   = pct+'%';
+    document.getElementById('check-sub').textContent   = `${done} / ${total} チェック済`;
+    document.getElementById('progress-fill').style.width = pct+'%';
+    document.getElementById('home-checked').textContent = done;
+}
+
+function resetChecklist() {
+    if (!confirm('チェックをリセットしますか？')) return;
+    Object.keys(checkState).forEach(k=>delete checkState[k]);
+    buildChecklist();
+}
+
+// ============================================================
+// GARAGE MAP (dynamic)
+// ============================================================
+function buildGarageMap() {
+    // Group gears by storage location
+    const groups = {};
+    GARAGE_LOCATION_MAP.forEach(loc=>{ groups[loc.key] = []; });
+    groups['その他'] = [];
+
+    gears.forEach(g=>{
+        const s = g.storage||'';
+        let placed = false;
+        for (const loc of GARAGE_LOCATION_MAP) {
+            if (s.includes(loc.key)) { groups[loc.key].push(g); placed=true; break; }
+        }
+        if (!placed) groups['その他'].push(g);
+    });
+
+    // Build visual map
+    const mapVisual = document.getElementById('garage-map-visual');
+    mapVisual.innerHTML = `
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-align:center;margin-bottom:12px;">— ガレージ平面図 —</div>
+        <div class="map-grid">
+            ${GARAGE_LOCATION_MAP.map(loc=>`
+            <div class="map-cell${loc.key==='床置き'?' full':''}" onclick="openGarageArea('g-${loc.id}')">
+                <div class="map-cell-icon">${loc.icon}</div>
+                <div class="map-cell-name">${loc.name}</div>
+                <div class="map-cell-desc">${groups[loc.key].length}点</div>
+            </div>`).join('')}
+            ${groups['その他'].length ? `<div class="map-cell full" onclick="openGarageArea('g-other')">
+                <div class="map-cell-icon">📋</div>
+                <div class="map-cell-name">その他</div>
+                <div class="map-cell-desc">${groups['その他'].length}点</div>
+            </div>` : ''}
+        </div>`;
+
+    // Build area list
+    const allAreas = [
+        ...GARAGE_LOCATION_MAP.map(loc=>({ id:'g-'+loc.id, icon:loc.icon, name:loc.name, desc:loc.desc, list:groups[loc.key] })),
+        ...(groups['その他'].length ? [{ id:'g-other', icon:'📋', name:'その他', desc:'エリア未設定', list:groups['その他'] }] : []),
+    ].filter(a=>a.list.length>0);
+
+    document.getElementById('garage-areas').innerHTML = allAreas.map(area=>`
+        <div class="garage-area" id="${area.id}">
+            <div class="area-header" onclick="toggleArea('${area.id}')">
+                <div class="area-title">
+                    <span class="area-icon">${area.icon}</span>
+                    <div><div>${area.name}</div><div class="area-desc">${area.desc}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;">
+                    <span class="area-badge">${area.list.length}点</span>
+                    <span class="area-chevron">›</span>
+                </div>
+            </div>
+            <div class="area-items">
+                ${area.list.map(g=>`
+                <div class="area-item" onclick="showGearDetail('${g.id}')">
+                    <span class="area-item-emoji">${esc(g.emoji||'📦')}</span>
+                    <div>
+                        <div class="area-item-name">${esc(g.name)}</div>
+                        <div class="area-item-meta">${esc(g.maker)}　・　${esc(g.category)}</div>
+                    </div>
+                    <span class="area-item-arrow">›</span>
+                </div>`).join('')}
+            </div>
+        </div>`).join('');
+}
+
+function toggleArea(id) { document.getElementById(id).classList.toggle('expanded'); }
+
+function openGarageArea(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('expanded'); setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),50); }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+    gears = loadGears();
+    saveGears(); // ensure persisted
+    rebuildFilterBar();
+    renderGearList();
+    buildHome();
+    buildPDFList();
+    buildChecklist();
+    buildGarageMap();
+    updateHomeStats();
+});
+</script>
+</body>
+</html>
