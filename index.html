@@ -43,7 +43,7 @@
             width:100%; max-width:430px; background:var(--bg-header);
             display:flex; justify-content:space-around; align-items:flex-start;
             padding:10px 0 calc(10px + env(safe-area-inset-bottom));
-            z-index:200; box-shadow:0 -2px 10px var(--shadow);
+            z-index:1000; box-shadow:0 -2px 10px var(--shadow);
         }
         .nav-item {
             display:flex; flex-direction:column; align-items:center; gap:4px;
@@ -570,11 +570,19 @@
         }
         .gradient-preset.on { border-color:var(--text-primary); transform:scale(1.1); }
 
-        /* Form action bar */
+        /* Form action bar
+           sticky at calc(72px + safe-area) above viewport bottom
+           = just above the bottom-nav (nav height ≈ 58px + safe-area)
+           bottom-nav has z-index:1000; this bar z-index:500 (no overlap needed) */
         .form-actions {
-            position:sticky; bottom:0; background:var(--bg);
-            padding:12px 14px calc(12px + env(safe-area-inset-bottom));
-            border-top:1px solid var(--border); display:flex; gap:10px; z-index:100;
+            position:sticky;
+            bottom:calc(72px + env(safe-area-inset-bottom));
+            background:var(--bg);
+            padding:10px 14px;
+            border-top:1px solid var(--border);
+            display:flex; gap:10px;
+            z-index:500;
+            box-shadow:0 -2px 6px var(--shadow);
         }
         .btn-form-cancel {
             background:var(--bg-card); color:var(--text-secondary); border:2px solid var(--border);
@@ -811,8 +819,8 @@
 </div>
 
 <!-- ==============================  GEAR EDIT / ADD  ============================== -->
-<div class="screen" id="screen-gear-edit" style="padding-bottom:0;">
-    <div id="gear-form-body" style="padding:14px 14px 0;"></div>
+<div class="screen" id="screen-gear-edit" style="padding-bottom:calc(150px + env(safe-area-inset-bottom));">
+    <div id="gear-form-body" style="padding:14px 14px 10px;"></div>
     <div class="form-actions">
         <button class="btn-form-cancel" onclick="cancelEdit()">キャンセル</button>
         <button class="btn-form-save"   onclick="submitGearForm()">💾 保存する</button>
@@ -1824,9 +1832,10 @@ function renderGearList() {
 }
 
 function tentCardHTML(g) {
-    const photoBg = g.photoGradient || 'linear-gradient(135deg,#8B6B4A,#4A2E18)';
-    const photoInner = g.photoImage
-        ? `<img src="${esc(g.photoImage)}" class="tent-photo-img" alt="${esc(g.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><div class="tent-photo-emoji-fb" style="display:none;">${esc(g.emoji||'⛺')}</div>`
+    const photoBg  = g.photoGradient || 'linear-gradient(135deg,#8B6B4A,#4A2E18)';
+    const _tentImg = g.gearImage || g.photoImage || '';
+    const photoInner = _tentImg
+        ? `<img src="${esc(_tentImg)}" class="tent-photo-img" alt="${esc(g.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><div class="tent-photo-emoji-fb" style="display:none;">${esc(g.emoji||'⛺')}</div>`
         : `<div style="filter:drop-shadow(0 3px 8px rgba(0,0,0,0.35));font-size:62px;line-height:1;">${esc(g.emoji||'⛺')}</div>`;
     return `
     <div class="tent-card" onclick="showGearDetail('${g.id}')">
@@ -1931,8 +1940,9 @@ function showGearDetail(id) {
 function buildTentDetail(g) {
     const specs = Object.entries(g.specs||{}).map(([k,v])=>`<div class="info-row"><span class="info-label">${esc(k)}</span><span class="info-value">${esc(v)}</span></div>`).join('');
     const steps = (arr,bg) => (arr||[]).map((s,i)=>`<li class="step-item"><span class="step-num" style="background:${bg};">${i+1}</span><span class="step-text">${esc(s)}</span></li>`).join('');
-    const heroPhoto = g.photoImage
-        ? `<img src="${esc(g.photoImage)}" class="tent-detail-img" alt="${esc(g.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><div class="gear-detail-emoji" style="display:none;">${esc(g.emoji||'⛺')}</div>`
+    const _heroImg  = g.gearImage || g.photoImage || '';
+    const heroPhoto = _heroImg
+        ? `<img src="${esc(_heroImg)}" class="tent-detail-img" alt="${esc(g.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><div class="gear-detail-emoji" style="display:none;">${esc(g.emoji||'⛺')}</div>`
         : `<div class="gear-detail-emoji">${esc(g.emoji||'⛺')}</div>`;
     return `
         <div class="gear-detail-hero" style="background:${g.photoGradient||'linear-gradient(135deg,#4A3525,#8B7A5A)'};">
@@ -2121,19 +2131,22 @@ function buildGearForm(g) {
             </div>
             <div class="form-field">
                 <label class="form-label">📸 ギア写真</label>
-                <input type="hidden" id="f-gear-image-data" value="${esc(g&&g.gearImage?g.gearImage:'')}">
+                ${(()=>{
+                    const _img = g ? (g.gearImage || g.photoImage || '') : '';
+                    return `<input type="hidden" id="f-gear-image-data" value="${esc(_img)}">
                 <div id="f-image-preview-wrap" style="margin-bottom:10px;">
-                    ${g&&g.gearImage
-                        ? `<img src="${g.gearImage}" style="width:100%;max-height:180px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">`
+                    ${_img
+                        ? `<img src="${esc(_img)}" style="width:100%;max-height:180px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">`
                         : `<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">写真なし（絵文字で表示）</div>`}
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <label class="gear-img-upload-label" for="f-gear-image">📷 写真を選ぶ</label>
                     <input type="file" id="f-gear-image" accept="image/*" style="display:none;" onchange="handleGearImageUpload(this)">
                     <button type="button" class="gear-img-remove-btn" id="f-image-remove-btn"
-                        style="display:${g&&g.gearImage?'block':'none'};"
+                        style="display:${_img?'block':'none'};"
                         onclick="removeGearImage()">✕ 削除</button>
-                </div>
+                </div>`;
+                })()}
                 <div class="form-hint">JPEGまたはPNG・スマホのカメラロールからも選べます</div>
             </div>
         </div>
@@ -2368,6 +2381,16 @@ function submitGearForm() {
 
     saveGears();
     showToast(editingId ? '保存しました ✓' : 'ギアを追加しました ✓');
+
+    // 保存後に gear-detail も最新データで再描画（戻ったとき古いデータが出ないよう）
+    const savedGear = gears.find(x => x.id === data.id);
+    if (savedGear) {
+        const dc = document.getElementById('gear-detail-content');
+        dc.innerHTML = savedGear.category === 'テント'
+            ? buildTentDetail(savedGear) : buildStandardDetail(savedGear);
+        renderVideoMgmt(savedGear.id);
+    }
+
     rebuildFilterBar();
     renderGearList();
     buildHome();
