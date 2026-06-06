@@ -253,6 +253,47 @@
         .caution-icon { font-size:18px; flex-shrink:0; }
         .caution-text { font-size:13px; color:var(--warn-text); line-height:1.7; }
         .video-note  { background:var(--bg); border-radius:12px; padding:14px; font-size:13px; color:var(--text-secondary); line-height:1.7; white-space:pre-line; }
+
+        /* ===== VIDEO ACCORDION (detail) ===== */
+        .video-acc-item { border-bottom:1px solid var(--border); }
+        .video-acc-item:last-child { border-bottom:none; }
+        .video-acc-header {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:12px 0; cursor:pointer; user-select:none; gap:10px;
+        }
+        .video-acc-title { font-size:14px; font-weight:700; color:var(--text-primary); flex:1; }
+        .video-acc-chevron { color:var(--text-muted); font-size:20px; transition:transform 0.2s; flex-shrink:0; }
+        .video-acc-item.open .video-acc-chevron { transform:rotate(90deg); }
+        .video-acc-body { padding-bottom:14px; }
+        .video-acc-link {
+            display:flex; align-items:center; gap:8px;
+            background:var(--accent-brown); color:white; text-decoration:none;
+            border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700;
+            margin-bottom:10px;
+        }
+        .video-acc-link:active { opacity:0.85; }
+        .video-acc-memo { font-size:13px; color:var(--text-secondary); line-height:1.7; white-space:pre-line; }
+
+        /* ===== VIDEO ENTRY FORM (edit) ===== */
+        .video-entry-form {
+            background:var(--bg); border-radius:14px; padding:14px 14px 10px;
+            margin-bottom:10px; border:1px solid var(--border);
+        }
+        .video-entry-header {
+            display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+        }
+        .video-entry-label { font-size:13px; font-weight:700; color:var(--text-secondary); }
+        .video-entry-del {
+            background:none; border:none; color:var(--danger); cursor:pointer;
+            font-size:13px; padding:4px 8px; border-radius:8px; font-family:inherit; font-weight:600;
+        }
+        .video-entry-del:active { background:rgba(204,42,42,0.08); }
+        .add-video-btn {
+            width:100%; background:var(--bg-card); border:2px dashed var(--border);
+            border-radius:12px; padding:13px; font-size:14px; font-weight:700;
+            color:var(--text-secondary); cursor:pointer; font-family:inherit; transition:all 0.15s;
+        }
+        .add-video-btn:active { background:var(--bg); border-color:var(--accent-brown); color:var(--accent-brown); }
         .features-text { font-size:14px; color:var(--text-primary); line-height:1.75; white-space:pre-line; }
 
         /* Detail action bar */
@@ -680,7 +721,13 @@ const DEFAULT_GEARS = [
       setupDifficulty:3, recommendedPeople:'2〜4人', tentTags:['solo','duo','family','easy'],
       photoGradient:'linear-gradient(135deg,#8B6B4A,#4A2E18)', storage:'棚A',
       storageMethod:'収納袋にロール状にまとめ、棚Aに立てて保管。ポールは専用ケースに入れて横に。',
-      pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf', video:'■ 設営動画①（まず最初に見る）\nサーカスST DX 設営＆張り方紹介\nhttps://www.youtube.com/watch?v=2XTSgGJNW4M\n内容：ペグダウン・ポール立ち上げ・ガイロープ調整・基本設営手順\nメモ：五角形をきれいに作るのが成功のコツ。\n\n■ 撤収動画\nサーカスST 撤収編\nhttps://www.youtube.com/watch?v=ZjZeq9Xj3So\n内容：撤収手順・ポール収納・袋への収納方法\nメモ：初回撤収前に見ておくと収納で迷わない。\n\n■ 収納動画（公式）\nテンマク公式 サーカスシリーズ収納方法\nhttps://www.youtube.com/watch?v=dg8DIp8zg_8\n内容：正しい畳み方・収納袋への入れ方\nメモ：撤収時に毎回確認用として便利。\n\n【設営のコツ】\n① 五角形を作る\n② 5か所ペグダウン\n③ テントを広げる\n④ センターポールを立てる\n⑤ ガイロープ調整\n\nサーカスSTは「五角形」が8割。\n先にポールを立てるより、五角形をきれいに作ることが重要。',
+      pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf',
+      videos:[
+          { title:'設営動画①（まず最初に見る）', url:'https://www.youtube.com/watch?v=2XTSgGJNW4M', memo:'内容：ペグダウン・ポール立ち上げ・ガイロープ調整・基本設営手順\nメモ：五角形をきれいに作るのが成功のコツ。' },
+          { title:'撤収動画', url:'https://www.youtube.com/watch?v=ZjZeq9Xj3So', memo:'内容：撤収手順・ポール収納・袋への収納方法\nメモ：初回撤収前に見ておくと収納で迷わない。' },
+          { title:'収納動画（公式）', url:'https://www.youtube.com/watch?v=dg8DIp8zg_8', memo:'内容：正しい畳み方・収納袋への入れ方\nメモ：撤収時に毎回確認用として便利。' },
+          { title:'設営のコツ', url:'', memo:'① 五角形を作る\n② 5か所ペグダウン\n③ テントを広げる\n④ センターポールを立てる\n⑤ ガイロープ調整\n\nサーカスSTは「五角形」が8割。\n先にポールを立てるより、五角形をきれいに作ることが重要。' },
+      ],
       setup:['グランドシートを広げ、テント本体を上に置く','全てのペグループを外に広げ、仮ペグで固定する（6か所）','テント中央にポールを立て、グロメットにポール先端を合わせる','ポールを伸ばしてテントを立ち上げる','形を整えながら全ペグを本固定する','ガイラインを6方向に張り、テンションを整えて完成'],
       takedown:['ガイラインを全て外す','ポールをゆっくり縮めてテントを降ろす','全ペグを回収する（6本確認）','内部の結露や汚れを拭き取る','テントを折りたたみ収納袋に入れる','帰宅後に必ず乾燥させてから保管'],
       caution:'ペグは必ず6本以上打つこと。強風時はガイラインを必ず張る。ポールが中央にあるため移動動線に注意。', specs:{タイプ:'ワンポールテント',収納場所:'棚A'} },
@@ -787,6 +834,7 @@ let pdfFilterCat  = 'all';
 const compTags    = new Set();
 const checkState  = {};
 let editingId     = null; // null = new gear
+let editingVideos = [];
 
 // ============================================================
 // STORAGE
@@ -843,6 +891,101 @@ function textareaToSteps(text) {
 
 function stepsToTextarea(steps) {
     return (steps||[]).join('\n');
+}
+
+// ============================================================
+// VIDEO MEMO MANAGEMENT
+// ============================================================
+function syncVideoEntries() {
+    editingVideos = editingVideos.map((_, i) => ({
+        title: (document.getElementById('f-video-title-' + i)?.value || '').trim(),
+        url:   (document.getElementById('f-video-url-'   + i)?.value || '').trim(),
+        memo:  (document.getElementById('f-video-memo-'  + i)?.value || '').trim(),
+    }));
+}
+
+function renderVideoForm() {
+    const container = document.getElementById('f-videos-container');
+    if (!container) return;
+    if (!editingVideos.length) {
+        container.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:4px 0 12px;">動画が登録されていません</div>';
+        return;
+    }
+    container.innerHTML = editingVideos.map((v, i) => `
+        <div class="video-entry-form">
+            <div class="video-entry-header">
+                <span class="video-entry-label">動画 ${i + 1}</span>
+                <button type="button" class="video-entry-del" onclick="removeVideoEntry(${i})">🗑 削除</button>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-video-title-${i}">タイトル</label>
+                <input class="form-input" type="text" id="f-video-title-${i}" placeholder="例：設営動画" value="${esc(v.title || '')}">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="f-video-url-${i}">URL</label>
+                <input class="form-input" type="url" id="f-video-url-${i}" placeholder="https://www.youtube.com/watch?v=..." value="${esc(v.url || '')}">
+            </div>
+            <div class="form-field" style="margin-bottom:0;">
+                <label class="form-label" for="f-video-memo-${i}">メモ</label>
+                <textarea class="form-input" id="f-video-memo-${i}" rows="2" placeholder="動画の内容・ポイントを入力…">${esc(v.memo || '')}</textarea>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addVideoEntry() {
+    syncVideoEntries();
+    editingVideos.push({ title: '', url: '', memo: '' });
+    renderVideoForm();
+    const container = document.getElementById('f-videos-container');
+    if (container && container.lastElementChild) {
+        container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function removeVideoEntry(idx) {
+    syncVideoEntries();
+    editingVideos.splice(idx, 1);
+    renderVideoForm();
+}
+
+function collectVideoEntries() {
+    syncVideoEntries();
+    return editingVideos.filter(v => v.title || v.url || v.memo);
+}
+
+function videoAccordionHTML(g) {
+    const videos = g.videos;
+    if (videos && videos.length) {
+        const items = videos.map((v, i) => `
+            <div class="video-acc-item" id="vai-${i}">
+                <div class="video-acc-header" onclick="toggleVideoAcc(${i})">
+                    <span class="video-acc-title">▶ ${esc(v.title || '（タイトルなし）')}</span>
+                    <span class="video-acc-chevron">›</span>
+                </div>
+                <div class="video-acc-body" id="vaib-${i}" style="display:none;">
+                    ${v.url ? `<a href="${esc(v.url)}" target="_blank" rel="noopener" class="video-acc-link">▶ YouTubeで開く</a>` : ''}
+                    ${v.memo ? `<div class="video-acc-memo">${esc(v.memo)}</div>` : ''}
+                </div>
+            </div>`).join('');
+        return `<div class="detail-section">
+            <div class="detail-section-title">🎬 動画メモ <span style="font-size:12px;font-weight:400;color:var(--text-muted);">(${videos.length}件)</span></div>
+            ${items}
+        </div>`;
+    }
+    if (g.video) {
+        return '<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">' + videoNoteHTML(g.video) + '</div></div>';
+    }
+    return '';
+}
+
+function toggleVideoAcc(i) {
+    const body = document.getElementById('vaib-' + i);
+    const item = document.getElementById('vai-' + i);
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    item.classList.toggle('open', !isOpen);
 }
 
 // ============================================================
@@ -1045,7 +1188,7 @@ function buildTentDetail(g) {
             ${pdfRowHTML(g)}
             ${specs}
         </div>
-        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${videoNoteHTML(g.video)}</div></div>`:''}
+        ${videoAccordionHTML(g)}
     `;
 }
 
@@ -1075,7 +1218,7 @@ function buildStandardDetail(g) {
         ${(g.takedown||[]).length?`<div class="detail-section"><div class="detail-section-title">⬇️ 撤収・片付け手順</div><ul class="step-list">${steps(g.takedown,'#5C4A35')}</ul></div>`:''}
         ${g.storageMethod?`<div class="detail-section"><div class="detail-section-title">📦 収納方法</div><div class="video-note">${esc(g.storageMethod)}</div></div>`:''}
         ${g.caution?`<div class="detail-section"><div class="detail-section-title">⚠️ 注意点</div><div class="caution-box"><span class="caution-icon">⚠️</span><span class="caution-text">${esc(g.caution)}</span></div></div>`:''}
-        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${videoNoteHTML(g.video)}</div></div>`:''}
+        ${videoAccordionHTML(g)}
     `;
 }
 
@@ -1123,6 +1266,7 @@ function buildGearForm(g) {
     const selGradient = g ? (g.photoGradient||GRADIENT_PRESETS[0].value) : GRADIENT_PRESETS[0].value;
     const selDiff     = g ? (g.setupDifficulty||3) : 3;
     const selTags     = g ? (g.tentTags||[]) : [];
+    editingVideos = g ? JSON.parse(JSON.stringify(g.videos||[])) : [];
 
     // Build gradient preset circles
     const gradientHTML = GRADIENT_PRESETS.map((p,i)=>`
@@ -1248,10 +1392,13 @@ function buildGearForm(g) {
                 <label class="form-label" for="f-pdf">取説PDF名</label>
                 <input class="form-input" type="text" id="f-pdf" placeholder="例：SnowPeak_Vault_manual.pdf" value="${esc(g?g.pdf:'')}">
             </div>
-            <div class="form-field">
-                <label class="form-label" for="f-video">動画URLメモ</label>
-                <input class="form-input" type="text" id="f-video" placeholder="例：YouTube: ヴォールト 設営 で検索" value="${esc(g?g.video:'')}">
-            </div>
+        </div>
+
+        <!-- 動画メモ -->
+        <div class="form-section">
+            <div class="form-section-title">🎬 動画メモ</div>
+            <div id="f-videos-container"></div>
+            <button type="button" class="add-video-btn" onclick="addVideoEntry()">＋ 動画を追加</button>
         </div>
 
         ${editingId ? `
@@ -1263,6 +1410,7 @@ function buildGearForm(g) {
 
         <div style="height:20px;"></div>
     `;
+    renderVideoForm();
 }
 
 function onCategoryChange() {
@@ -1322,7 +1470,7 @@ function submitGearForm() {
         storageMethod:  (document.getElementById('f-storage-method').value||'').trim(),
         caution:        (document.getElementById('f-caution').value||'').trim(),
         pdf:            (document.getElementById('f-pdf').value||'').trim(),
-        video:          (document.getElementById('f-video').value||'').trim(),
+        videos:         collectVideoEntries(),
         specs:          original ? (original.specs||{}) : {},
     };
 
