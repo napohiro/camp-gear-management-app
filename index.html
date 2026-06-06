@@ -189,11 +189,29 @@
             padding:8px 12px; font-size:13px; font-weight:700; color:#c0392b;
             cursor:pointer; font-family:inherit; transition:all 0.15s;
         }
-        .gear-list-hint {
-            font-size:12px; color:var(--text-muted); line-height:1.6;
-            background:var(--bg-card); border-radius:12px; padding:10px 14px;
-            border:1px solid var(--border); margin-bottom:12px;
+        /* ===== CATEGORY MANAGER ===== */
+        .cat-mgr-toggle {
+            background:none; border:none; font-size:12px; font-weight:700;
+            color:var(--text-muted); cursor:pointer; font-family:inherit;
+            padding:3px 6px; display:block; margin-left:auto;
         }
+        .cat-mgr-panel {
+            background:var(--bg-card); border:1px solid var(--border);
+            border-radius:14px; padding:14px; margin-bottom:14px;
+        }
+        .cat-mgr-item {
+            display:flex; align-items:center; gap:8px; padding:8px 4px;
+            border-bottom:1px solid var(--border);
+        }
+        .cat-mgr-item:last-of-type { border-bottom:none; }
+        .cat-mgr-icon  { font-size:18px; min-width:26px; text-align:center; }
+        .cat-mgr-name  { font-size:14px; font-weight:700; color:var(--text-primary); flex:1; }
+        .cat-mgr-count { font-size:11px; color:var(--text-muted); background:var(--bg); border-radius:6px; padding:1px 6px; }
+        .cat-color-swatch {
+            width:26px; height:26px; border-radius:7px; cursor:pointer;
+            flex-shrink:0; transition:transform 0.1s;
+        }
+        .cat-color-swatch.selected { transform:scale(1.25); }
 
         /* ===== TENT CARD ===== */
         .tent-card {
@@ -733,9 +751,10 @@
     <button class="add-gear-btn" onclick="showAddGear()">
         <span style="font-size:22px;">＋</span> ギアを追加する
     </button>
-    <div class="gear-list-hint">カテゴリを選ぶと、必要なギアだけをすぐ確認できます。写真を登録すると、キャンプ前の準備がもっと分かりやすくなります。</div>
     <input class="search-bar" type="text" placeholder="🔍 ギア名・メーカー・カテゴリ・収納場所で検索…" id="gear-search" oninput="renderGearList()">
     <div class="gear-filter" id="filter-bar"></div>
+    <button class="cat-mgr-toggle" onclick="toggleCatManager()">⚙️ カテゴリを編集</button>
+    <div id="cat-mgr-panel" style="display:none;"></div>
 
     <!-- テント比較セクション -->
     <div id="comparison-section" style="display:none;">
@@ -865,6 +884,7 @@ const PDF_STORAGE_KEY      = 'camp_manuals_v1';
 const CHECKLIST_STATE_KEY  = 'camp_checklist_v1';
 const CHECKLIST_TRIP_KEY   = 'camp_trip_v1';
 const CHECKLIST_VIDEO_KEY  = 'camp_checklist_videos_v1';
+const CATEGORIES_KEY       = 'camp_categories_v1';
 
 const TENT_TAG_DEF = {
     solo:     { label:'👤 ソロ向き',      color:'#C4723A', bg:'#FFF0E6' },
@@ -886,27 +906,45 @@ const SLEEPING_BAG_TAG_DEF = {
     warmth:    { label:'🔥 防寒重視',         color:'#B85A28', bg:'#FFF0E6' },
 };
 
-const CAT_ICONS = {
-    'テント':'⛺','タープ':'🏕️','焚き火台':'🔥','ランタン':'💡',
-    'バーナー':'🔥','調理器具':'🍳','クーラー':'🧊','寝袋・マット':'🛌',
-    '収納':'📦','その他ギア':'📋','その他':'📋',
-};
-
-const CATEGORIES = ['テント','タープ','焚き火台','ランタン','バーナー','調理器具','クーラー','寝袋・マット','収納','その他ギア'];
-
-const CAT_COLORS = {
-    'テント':      { bg:'#F5F0E8', border:'#C8B896', text:'#6B5340' },
-    'タープ':      { bg:'#EEF3E8', border:'#B4C8A0', text:'#486B38' },
-    '焚き火台':    { bg:'#FFF0E6', border:'#E8B48A', text:'#8B4A28' },
-    'ランタン':    { bg:'#FFFBE6', border:'#E8D870', text:'#7A6B20' },
-    'バーナー':    { bg:'#FFF4E6', border:'#E8C090', text:'#8B5A28' },
-    '調理器具':    { bg:'#FAF5EC', border:'#D4C09A', text:'#6B5540' },
-    'クーラー':    { bg:'#E8F4FF', border:'#90BEDD', text:'#2A5A8A' },
-    '寝袋・マット':{ bg:'#EAF5EB', border:'#90C89A', text:'#2A6A40' },
-    '収納':        { bg:'#F5EDE8', border:'#C8AA90', text:'#6A4A38' },
-    'その他ギア':  { bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' },
-};
+// 動的に initCatMaps() で内容が設定される
+const CAT_ICONS  = {};
+const CAT_COLORS = {};
 const CAT_COLORS_DEFAULT = { bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' };
+
+// カテゴリのデフォルトカラーパレット
+const CAT_COLOR_PRESETS = [
+    { name:'カーキ',        bg:'#F5F0E8', border:'#C8B896', text:'#6B5340' },
+    { name:'グリーン',      bg:'#EAF5EB', border:'#90C89A', text:'#2A6A40' },
+    { name:'オレンジ',      bg:'#FFF0E6', border:'#E8B48A', text:'#8B4A28' },
+    { name:'イエロー',      bg:'#FFFBE6', border:'#E8D870', text:'#7A6B20' },
+    { name:'ブルー',        bg:'#E8F4FF', border:'#90BEDD', text:'#2A5A8A' },
+    { name:'ライトグリーン',bg:'#EEF3E8', border:'#B4C8A0', text:'#486B38' },
+    { name:'ブラウン',      bg:'#F5EDE8', border:'#C8AA90', text:'#6A4A38' },
+    { name:'グレー',        bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' },
+];
+
+// 旧カテゴリ → 新カテゴリへのマイグレーションマップ
+const CAT_MIGRATION_MAP = {
+    'タープ':     'テント',
+    '焚き火台':   '焚き火',
+    'ランタン':   '照明',
+    'バーナー':   '調理関連',
+    '調理器具':   '調理関連',
+    'クーラー':   '調理関連',
+    '寝袋・マット':'寝具',
+    '収納':       'その他',
+    'その他ギア': 'その他',
+};
+
+const DEFAULT_CATEGORIES = [
+    { id:'cat_tent',   name:'テント',   icon:'⛺', bg:'#F5F0E8', border:'#C8B896', text:'#6B5340' },
+    { id:'cat_sleep',  name:'寝具',     icon:'🛏️', bg:'#EAF5EB', border:'#90C89A', text:'#2A6A40' },
+    { id:'cat_cook',   name:'調理関連', icon:'🍳', bg:'#FAF5EC', border:'#D4C09A', text:'#6B5540' },
+    { id:'cat_fire',   name:'焚き火',   icon:'🔥', bg:'#FFF0E6', border:'#E8B48A', text:'#8B4A28' },
+    { id:'cat_light',  name:'照明',     icon:'💡', bg:'#FFFBE6', border:'#E8D870', text:'#7A6B20' },
+    { id:'cat_living', name:'リビング', icon:'🪑', bg:'#EEF3E8', border:'#B4C8A0', text:'#486B38' },
+    { id:'cat_other',  name:'その他',   icon:'📦', bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' },
+];
 
 const GRADIENT_PRESETS = [
     { name:'ウォームブラウン', value:'linear-gradient(135deg,#8B6B4A,#4A2E18)' },
@@ -1008,7 +1046,7 @@ const DEFAULT_GEARS = [
       takedown:['フライシートを外す','ガイライン・全ペグを回収する','フレームをテントから外しバラす','テント本体を折りたたむ','大きな収納袋に全パーツをまとめる（2人推奨）'],
       caution:'設営・撤収に時間がかかるため2人以上で行うこと。フレーム接続部は確実に固定する。大型で重量があるため運搬に注意。', specs:{タイプ:'ロッジ型テント',収納場所:'床置きエリア'} },
 
-    { id:'g5', name:'焚き火台 M', maker:'Snow Peak', category:'焚き火台', emoji:'🔥', storage:'左壁側（フック掛け）',
+    { id:'g5', name:'焚き火台 M', maker:'Snow Peak', category:'焚き火', emoji:'🔥', storage:'左壁側（フック掛け）',
       storageMethod:'収納ケースにたたんでまとめ、左壁側のフックに掛けて保管。',
       pdf:'SnowPeak_Takibi_M_manual.pdf', video:'YouTube: "スノーピーク 焚き火台M 組み立て" で検索',
       setup:['収納ケースから各パーツ（ボウル・脚・底板）を取り出す','四本の脚を広げて地面に置く','ボウル部分を脚の上にセットする','芝生・木製デッキでは焚き火シートを必ず下に敷く','着火剤と薪を用意してから着火する'],
@@ -1016,7 +1054,7 @@ const DEFAULT_GEARS = [
       caution:'芝生の上では必ず焚き火シートを使用すること。灰は指定場所に処理。高温になるため子どもの接近に注意。',
       specs:{サイズ:'35×35×H25cm',収納サイズ:'37×31×6.5cm',重量:'2.5kg',素材:'ステンレス'} },
 
-    { id:'g6', name:'ライトハウスマイクロ フラッシュ', maker:'Goal Zero', category:'ランタン', emoji:'💡', storage:'床置きエリア（ボックス内）',
+    { id:'g6', name:'ライトハウスマイクロ フラッシュ', maker:'Goal Zero', category:'照明', emoji:'💡', storage:'床置きエリア（ボックス内）',
       storageMethod:'床置きエリアのボックスに入れて保管。帰宅後は充電してから収納。',
       pdf:'GoalZero_Lighthouse_Micro_manual.pdf', video:'YouTube: "Goal Zero Lighthouse Micro Flash" で検索',
       setup:['出発前にmicro USBで充電しておく（最大10時間）','ボタンを押して点灯（押すたびに輝度が3段階で変わる）','長押しで赤色灯モードに切り替え','テント内は吊り下げフック、テーブル上はスタンドで使用'],
@@ -1024,7 +1062,7 @@ const DEFAULT_GEARS = [
       caution:'直射日光の当たる場所での長期保管は避ける。完全放電状態での長期保管は電池劣化の原因になる。',
       specs:{最大輝度:'250ルーメン',連続使用時間:'最大40時間',重量:'155g',防水:'IPX4'} },
 
-    { id:'g7', name:'レギュレーターストーブ ST-310', maker:'SOTO', category:'調理器具', emoji:'🍳', storage:'棚B（中段）',
+    { id:'g7', name:'レギュレーターストーブ ST-310', maker:'SOTO', category:'調理関連', emoji:'🍳', storage:'棚B（中段）',
       storageMethod:'専用ケースに入れ、棚Bの中段に保管。',
       pdf:'SOTO_ST310_manual.pdf', video:'YouTube: "SOTO ST-310 使い方" で検索',
       setup:['CB缶ガスカートリッジを用意する','五徳を開いてロックする','バルブをOFFにした状態でCB缶を接続する','バルブを少し開いてガスを出す','別途用意したライターで点火する（本体に点火装置なし）','炎の大きさを調整して調理開始'],
@@ -1032,7 +1070,7 @@ const DEFAULT_GEARS = [
       caution:'テント内や密閉空間での使用は一酸化炭素中毒の危険があり厳禁。使用後はバルブが確実に閉まっているか必ず確認。',
       specs:{発熱量:'2.9kW（2500kcal/h）',使用ガス:'CB缶',重量:'73g（本体のみ）'} },
 
-    { id:'g8', name:'フィールドラック', maker:'Uniflame', category:'収納', emoji:'📦', storage:'棚B（下段）',
+    { id:'g8', name:'フィールドラック', maker:'Uniflame', category:'リビング', emoji:'📦', storage:'棚B（下段）',
       storageMethod:'収納袋に折りたたんで棚Bの下段に保管。',
       pdf:'Uniflame_FieldRack_manual.pdf', video:'YouTube: "ユニフレーム フィールドラック" で検索',
       setup:['収納袋から取り出す','四本の脚を広げてロックする','ラック面が水平になっているか確認','複数枚を重ねて使用する場合は脚をかみ合わせる'],
@@ -1040,7 +1078,7 @@ const DEFAULT_GEARS = [
       caution:'耐荷重は1枚あたり30kg。重いものを乗せる際は必ず平坦な場所で使用。',
       specs:{使用時サイズ:'600×350×H250mm',重量:'1.2kg',耐荷重:'30kg',素材:'ステンレス'} },
 
-    { id:'s0', name:'soomloom マミー型 ダウン', maker:'soomloom', category:'寝袋・マット', emoji:'🛌',
+    { id:'s0', name:'soomloom マミー型 ダウン', maker:'soomloom', category:'寝具', emoji:'🛌',
       tagline:'コンパクトで暖かいダウンシュラフ',
       storage:'寝袋エリア', storageMethod:'収納袋に圧縮して保管。長期保管は取り出してルーズバッグへ。',
       sleepingBagTags:['sb_solo','compact','allseason'],
@@ -1051,7 +1089,7 @@ const DEFAULT_GEARS = [
       caution:'長期保管時は収納袋から出して保管すること。濡れた場合は必ず完全乾燥させてから収納。',
       videos:[] },
 
-    { id:'s1', name:'JP寝袋 封筒型 2人用', maker:'JP', category:'寝袋・マット', emoji:'🛌',
+    { id:'s1', name:'JP寝袋 封筒型 2人用', maker:'JP', category:'寝具', emoji:'🛌',
       tagline:'2人で使える大型シュラフ',
       storage:'寝袋エリア', storageMethod:'コンプレッションバッグで圧縮して収納。',
       sleepingBagTags:['sb_duo','sb_family','allseason'],
@@ -1062,7 +1100,7 @@ const DEFAULT_GEARS = [
       caution:'使用後は必ず陰干しして湿気を飛ばすこと。',
       videos:[] },
 
-    { id:'s2', name:'ICECO マミー型 冬用', maker:'ICECO', category:'寝袋・マット', emoji:'🛌',
+    { id:'s2', name:'ICECO マミー型 冬用', maker:'ICECO', category:'寝具', emoji:'🛌',
       tagline:'真冬対応の防寒シュラフ',
       storage:'寝袋エリア', storageMethod:'圧縮収納袋で保管。長期保管は収納袋から出して保管推奨。',
       sleepingBagTags:['winter','warmth'],
@@ -1073,7 +1111,7 @@ const DEFAULT_GEARS = [
       caution:'使用後は必ずしっかり乾燥させること。結露が多いため撤収後の乾燥が重要。',
       videos:[] },
 
-    { id:'s3', name:'オールシーズン寝袋 封筒型', maker:'', category:'寝袋・マット', emoji:'🛌',
+    { id:'s3', name:'オールシーズン寝袋 封筒型', maker:'', category:'寝具', emoji:'🛌',
       tagline:'幅広い季節に使える万能寝袋',
       storage:'寝袋エリア', storageMethod:'封筒型のため折りたたんで収納袋に。',
       sleepingBagTags:['allseason','sb_family'],
@@ -1084,7 +1122,7 @@ const DEFAULT_GEARS = [
       caution:'暑い時期は全開にして毛布代わりに使用可能。',
       videos:[] },
 
-    { id:'s4', name:'MILFORT 夏用封筒型（MF607SB）', maker:'MILFORT', category:'寝袋・マット', emoji:'🛌',
+    { id:'s4', name:'MILFORT 夏用封筒型（MF607SB）', maker:'MILFORT', category:'寝具', emoji:'🛌',
       tagline:'夏キャンプ向け軽量シュラフ',
       storage:'寝袋エリア', storageMethod:'コンパクトに折りたたんで収納袋へ。',
       sleepingBagTags:['summer'],
@@ -1095,7 +1133,7 @@ const DEFAULT_GEARS = [
       caution:'涼しい場所では保温力が不足する場合があるため、気温に応じて毛布と併用。',
       videos:[] },
 
-    { id:'g10', name:'ローディーカット 60', maker:'YETI', category:'クーラー', emoji:'🧊', storage:'右奥（床置き）',
+    { id:'g10', name:'ローディーカット 60', maker:'YETI', category:'調理関連', emoji:'🧊', storage:'右奥（床置き）',
       storageMethod:'右奥に平置き保管。使用前に必ず内部を確認。',
       pdf:'YETI_RoadieCut60_manual.pdf', video:'YouTube: "YETI ローディーカット 使い方" で検索',
       setup:['出発前日から空の状態で事前冷却する','氷は底面に敷き詰める（氷:食材 = 2:1）','食材は密閉袋に入れてから収納する','開閉は最小限にして保冷効率を保つ'],
@@ -1113,7 +1151,7 @@ const DEFAULT_MANUALS = [
     { id:'m2', gearName:'パップテント（軍幕TC）', maker:'TOMOUNT',        category:'テント',    pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
     { id:'m3', gearName:'ワンタッチドームテント', maker:'雑貨の国のアリス', category:'テント',   pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
     { id:'m4', gearName:'ロッジ型広空間テント', maker:'DesertFox',        category:'テント',    pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
-    { id:'m5', gearName:'焚き火台M',           maker:'Snow Peak',        category:'焚き火台',  pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
+    { id:'m5', gearName:'焚き火台M',           maker:'Snow Peak',        category:'焚き火',    pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
 ];
 
 const DEFAULT_CHECKLIST_VIDEOS = [
@@ -1125,6 +1163,8 @@ const DEFAULT_CHECKLIST_VIDEOS = [
 // ============================================================
 let gears         = [];
 let manuals       = [];
+let categories    = [];
+let catEditingIdx = null; // null=view, -1=add, n=edit
 let filterCat     = 'all';
 let pdfFilterCat  = 'all';
 const compTags    = new Set();
@@ -1157,6 +1197,42 @@ function migrateGears() {
     for (const bag of DEFAULT_GEARS.filter(g => newIds.includes(g.id))) {
         if (!gears.some(g => g.id === bag.id)) gears.push(bag);
     }
+}
+
+function loadCategories() {
+    try {
+        const raw = localStorage.getItem(CATEGORIES_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+}
+
+function saveCategories() {
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+}
+
+function initCatMaps() {
+    // CAT_ICONS / CAT_COLORS を categories 配列から再構築
+    for (const k of Object.keys(CAT_ICONS))  delete CAT_ICONS[k];
+    for (const k of Object.keys(CAT_COLORS)) delete CAT_COLORS[k];
+    for (const c of categories) {
+        CAT_ICONS[c.name]  = c.icon;
+        CAT_COLORS[c.name] = { bg: c.bg, border: c.border, text: c.text };
+    }
+}
+
+function migrateGearCategories() {
+    const validNames = new Set(categories.map(c => c.name));
+    const fallback   = categories[0]?.name || 'その他';
+    let changed = false;
+    for (const g of gears) {
+        if (!g.category) { g.category = fallback; changed = true; continue; }
+        if (!validNames.has(g.category)) {
+            g.category = CAT_MIGRATION_MAP[g.category] || fallback;
+            changed = true;
+        }
+    }
+    return changed;
 }
 
 function loadManuals() {
@@ -1544,10 +1620,128 @@ function updateHomeStats() {
 }
 
 // ============================================================
+// CATEGORY MANAGER
+// ============================================================
+function toggleCatManager() {
+    const panel = document.getElementById('cat-mgr-panel');
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen) { panel.style.display = 'none'; return; }
+    catEditingIdx = null;
+    buildCatManager(null);
+    panel.style.display = 'block';
+}
+
+function buildCatManager(editingIdx) {
+    catEditingIdx = editingIdx;
+    const panel = document.getElementById('cat-mgr-panel');
+    const rows = categories.map((c, i) => {
+        if (editingIdx === i) return _catEditFormHTML(i, c);
+        const count = gears.filter(g => g.category === c.name).length;
+        return `<div class="cat-mgr-item">
+            <span class="cat-mgr-icon">${c.icon}</span>
+            <span class="cat-mgr-name">${esc(c.name)}</span>
+            <span class="cat-mgr-count">${count}件</span>
+            <button onclick="buildCatManager(${i})" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;color:var(--text-muted);">編集</button>
+            <button onclick="deleteCat(${i})" style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid #E88;background:#FFF0F0;cursor:pointer;color:#C44;">削除</button>
+        </div>`;
+    }).join('');
+
+    const addSection = editingIdx === -1 ? _catEditFormHTML(-1, null) :
+        `<button onclick="buildCatManager(-1)" style="width:100%;margin-top:10px;padding:8px;border-radius:10px;border:1px dashed var(--border);background:var(--bg);cursor:pointer;font-size:13px;color:var(--text-muted);">＋ カテゴリを追加</button>`;
+
+    panel.innerHTML = `<div class="cat-mgr-panel">${rows}${addSection}</div>`;
+}
+
+function _catEditFormHTML(idx, cat) {
+    const isAdd = idx === -1;
+    const icon = cat ? esc(cat.icon) : '';
+    const name = cat ? esc(cat.name) : '';
+    const selectedPreset = cat ? CAT_COLOR_PRESETS.findIndex(p => p.bg === cat.bg) : 0;
+    const swatches = CAT_COLOR_PRESETS.map((p, i) =>
+        `<span class="cat-color-swatch${i===selectedPreset?' selected':''}" title="${p.name}"
+            style="background:${p.bg};border:2px solid ${p.border};"
+            onclick="selectCatColor(${i})" data-preset="${i}"></span>`
+    ).join('');
+    return `<div class="cat-mgr-item" id="cat-edit-form" style="flex-wrap:wrap;gap:10px;padding:12px 4px;">
+        <div style="display:flex;gap:8px;width:100%;">
+            <input id="ce-icon" value="${icon}" placeholder="絵文字" maxlength="2" style="width:52px;text-align:center;font-size:20px;border:1px solid var(--border);border-radius:8px;padding:4px;">
+            <input id="ce-name" value="${name}" placeholder="カテゴリ名" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%;">${swatches}</div>
+        <div style="display:flex;gap:8px;width:100%;margin-top:4px;">
+            <button onclick="saveCatEdit(${idx})" style="flex:1;padding:8px;border-radius:10px;border:none;background:var(--accent-brown);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">${isAdd?'追加':'保存'}</button>
+            <button onclick="buildCatManager(null)" style="padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg);font-size:13px;cursor:pointer;">キャンセル</button>
+        </div>
+    </div>`;
+}
+
+function selectCatColor(presetIdx) {
+    document.querySelectorAll('.cat-color-swatch').forEach((el, i) => {
+        el.classList.toggle('selected', i === presetIdx);
+    });
+}
+
+function saveCatEdit(idx) {
+    const icon = document.getElementById('ce-icon').value.trim() || '📋';
+    const name = document.getElementById('ce-name').value.trim();
+    if (!name) { showToast('カテゴリ名を入力してください'); return; }
+
+    const selectedSwatch = document.querySelector('.cat-color-swatch.selected');
+    const presetIdx = selectedSwatch ? parseInt(selectedSwatch.dataset.preset) : 0;
+    const preset = CAT_COLOR_PRESETS[presetIdx] || CAT_COLOR_PRESETS[0];
+
+    if (idx === -1) {
+        // add
+        if (categories.some(c => c.name === name)) { showToast('同じ名前のカテゴリが存在します'); return; }
+        categories.push({ id: 'cat_' + Date.now(), name, icon, bg: preset.bg, border: preset.border, text: preset.text });
+    } else {
+        const oldName = categories[idx].name;
+        if (name !== oldName && categories.some(c => c.name === name)) { showToast('同じ名前のカテゴリが存在します'); return; }
+        // rename gears if name changed
+        if (name !== oldName) {
+            for (const g of gears) { if (g.category === oldName) g.category = name; }
+            saveGears();
+        }
+        categories[idx] = { ...categories[idx], name, icon, bg: preset.bg, border: preset.border, text: preset.text };
+    }
+
+    saveCategories();
+    initCatMaps();
+    rebuildFilterBar();
+    renderGearList();
+    buildCatManager(null);
+    showToast(idx === -1 ? 'カテゴリを追加しました' : 'カテゴリを更新しました');
+}
+
+function deleteCat(idx) {
+    if (categories.length <= 1) { showToast('最後のカテゴリは削除できません'); return; }
+    const cat = categories[idx];
+    const count = gears.filter(g => g.category === cat.name).length;
+    const fallback = categories.find((_, i) => i !== idx)?.name || 'その他';
+    const msg = count > 0
+        ? `「${cat.name}」を削除します。\n所属する${count}件のギアは「${fallback}」に移動します。\n続けますか？`
+        : `「${cat.name}」を削除しますか？`;
+    if (!confirm(msg)) return;
+    if (count > 0) {
+        for (const g of gears) { if (g.category === cat.name) g.category = fallback; }
+        saveGears();
+    }
+    categories.splice(idx, 1);
+    saveCategories();
+    initCatMaps();
+    rebuildFilterBar();
+    renderGearList();
+    buildCatManager(null);
+    showToast('カテゴリを削除しました');
+}
+
+// ============================================================
 // GEAR LIST
 // ============================================================
 function rebuildFilterBar() {
-    const cats = [...new Set(gears.map(g=>g.category).filter(Boolean))].sort();
+    const usedCats = new Set(gears.map(g=>g.category).filter(Boolean));
+    // Show categories in defined order, only those with gears
+    const orderedCats = categories.map(c=>c.name).filter(n=>usedCats.has(n));
     const fb = document.getElementById('filter-bar');
 
     const chip = (cat, icon, label, count) => {
@@ -1565,7 +1759,7 @@ function rebuildFilterBar() {
     };
 
     fb.innerHTML = chip('all','🏕️','すべて', gears.length) +
-        cats.map(c => chip(c, CAT_ICONS[c]||'📋', c, gears.filter(g=>g.category===c).length)).join('');
+        orderedCats.map(c => chip(c, CAT_ICONS[c]||'📋', c, gears.filter(g=>g.category===c).length)).join('');
 }
 
 function setFilter(cat) {
@@ -1573,7 +1767,7 @@ function setFilter(cat) {
     compTags.clear();
     document.querySelectorAll('.comp-tag').forEach(b=>b.classList.remove('active'));
     document.getElementById('comparison-section').style.display    = cat==='テント'      ? 'block' : 'none';
-    document.getElementById('sb-comparison-section').style.display = cat==='寝袋・マット' ? 'block' : 'none';
+    document.getElementById('sb-comparison-section').style.display = cat==='寝具' ? 'block' : 'none';
     rebuildFilterBar();
     renderGearList();
 }
@@ -1600,13 +1794,13 @@ function renderGearList() {
     if (filterCat==='テント' && compTags.size>0) {
         filtered = filtered.filter(g=>g.tentTags && g.tentTags.some(t=>compTags.has(t)));
     }
-    if (filterCat==='寝袋・マット' && compTags.size>0) {
+    if (filterCat==='寝具' && compTags.size>0) {
         filtered = filtered.filter(g=>g.sleepingBagTags && g.sleepingBagTags.some(t=>compTags.has(t)));
     }
     const countEl   = document.getElementById('comp-match-count');
     const sbCountEl = document.getElementById('sb-comp-match-count');
     countEl.textContent   = (filterCat==='テント'      && compTags.size>0) ? filtered.length+'件のテントがマッチしました' : '';
-    sbCountEl.textContent = (filterCat==='寝袋・マット' && compTags.size>0) ? filtered.length+'件の寝袋がマッチしました' : '';
+    sbCountEl.textContent = (filterCat==='寝具' && compTags.size>0) ? filtered.length+'件の寝袋がマッチしました' : '';
 
     const container = document.getElementById('gear-list-items');
     if (!filtered.length) {
@@ -1615,7 +1809,7 @@ function renderGearList() {
     }
     container.innerHTML = filtered.map(g => {
         if (g.category === 'テント')      return tentCardHTML(g);
-        if (g.category === '寝袋・マット') return sleepingBagCardHTML(g);
+        if (g.category === '寝具') return sleepingBagCardHTML(g);
         return gearCardHTML(g);
     }).join('');
 }
@@ -1689,7 +1883,7 @@ function sleepingBagTagPills(tags) {
 }
 
 function sleepingBagCardHTML(g) {
-    const col       = CAT_COLORS['寝袋・マット'];
+    const col       = CAT_COLORS['寝具'];
     const tagPills  = sleepingBagTagPills(g.sleepingBagTags);
     const tempRange = (g.specs||{})['快適温度'] || '';
     return `
@@ -1792,7 +1986,7 @@ function buildStandardDetail(g) {
             <button class="btn-detail-delete" onclick="confirmDeleteGear('${g.id}')">🗑️ 削除</button>
         </div>
         ${g.tagline?`<div class="detail-section"><div class="detail-section-title">💬 説明</div><div class="features-text">${esc(g.tagline)}</div></div>`:''}
-        ${g.category==='寝袋・マット' && (g.sleepingBagTags||[]).length ? `<div class="detail-section"><div class="detail-section-title">🏷️ タグ</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${sleepingBagTagPills(g.sleepingBagTags)}</div></div>` : ''}
+        ${g.category==='寝具' && (g.sleepingBagTags||[]).length ? `<div class="detail-section"><div class="detail-section-title">🏷️ タグ</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${sleepingBagTagPills(g.sleepingBagTags)}</div></div>` : ''}
         <div class="detail-section">
             <div class="detail-section-title">📋 基本情報</div>
             <div class="info-row"><span class="info-label">収納場所</span><span class="info-value">📍 ${esc(g.storage)}</span></div>
@@ -1854,7 +2048,7 @@ function cancelEdit() {
 
 function buildGearForm(g) {
     const isTent        = g ? g.category==='テント'      : false;
-    const isSleepingBag = g ? g.category==='寝袋・マット' : false;
+    const isSleepingBag = g ? g.category==='寝具' : false;
     const selGradient   = g ? (g.photoGradient||GRADIENT_PRESETS[0].value) : GRADIENT_PRESETS[0].value;
     const selDiff       = g ? (g.setupDifficulty||3) : 3;
     const selTags       = g ? (g.tentTags||[]) : [];
@@ -1887,7 +2081,7 @@ function buildGearForm(g) {
         </div>`).join('');
 
     // Category options
-    const catOptions = CATEGORIES.map(c=>`<option value="${esc(c)}"${(g&&g.category===c)?' selected':''}>${CAT_ICONS[c]||''} ${esc(c)}</option>`).join('');
+    const catOptions = categories.map(c=>`<option value="${esc(c.name)}"${(g&&g.category===c.name)?' selected':''}>${c.icon} ${esc(c.name)}</option>`).join('');
 
     // Emoji presets
     const EMOJIS = ['⛺','🏕️','🔥','💡','🍳','🛌','📦','🧊','🪖','🎪','🏠','🪓','🗡️','🧲','🔦','🧯','🛶','🏔️'];
@@ -2041,7 +2235,7 @@ function buildGearForm(g) {
 function onCategoryChange() {
     const cat           = document.getElementById('f-category').value;
     const isTent        = cat === 'テント';
-    const isSleepingBag = cat === '寝袋・マット';
+    const isSleepingBag = cat === '寝具';
     document.getElementById('f-tent-section').style.display          = isTent        ? 'block' : 'none';
     document.getElementById('f-features-field').style.display        = isTent        ? 'block' : 'none';
     document.getElementById('f-sleeping-bag-section').style.display  = isSleepingBag ? 'block' : 'none';
@@ -2152,7 +2346,7 @@ function submitGearForm() {
         data.recommendedPeople= (document.getElementById('f-people').value||'').trim();
         data.photoGradient    = document.getElementById('f-gradient').value;
         data.tentTags         = getSelectedTentTags();
-    } else if (category === '寝袋・マット') {
+    } else if (category === '寝具') {
         data.sleepingBagTags  = getSelectedSleepingBagTags();
     }
 
@@ -2654,9 +2848,12 @@ function showToast(msg) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', ()=>{
-    gears   = loadGears();
+    categories = loadCategories();
+    initCatMaps();
+    gears      = loadGears();
     migrateGears();
-    saveGears();
+    if (migrateGearCategories()) saveGears();
+    else saveGears();
     manuals = loadManuals();
     saveManuals();
     loadCheckState();
