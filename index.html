@@ -512,6 +512,82 @@
         }
         .demo-banner-text { font-size:12px; color:var(--green-text); line-height:1.6; }
 
+        /* ===== VIDEO MANAGEMENT (detail view CRUD) ===== */
+        .video-mgmt-card {
+            background:var(--bg); border-radius:14px; padding:12px;
+            margin-bottom:10px; border:1px solid var(--border);
+            display:flex; gap:10px; align-items:flex-start;
+        }
+        .video-thumb-wrap {
+            flex-shrink:0; width:90px; height:51px; border-radius:8px;
+            overflow:hidden; background:#1A1A2E;
+            display:flex; align-items:center; justify-content:center; position:relative;
+        }
+        .video-thumb { width:100%; height:100%; object-fit:cover; display:block; }
+        .video-thumb-none { font-size:24px; line-height:1; }
+        .video-play-overlay {
+            position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+            background:rgba(0,0,0,0.35); color:white; font-size:20px;
+            opacity:0; transition:opacity 0.15s; pointer-events:none;
+        }
+        .video-thumb-wrap:active .video-play-overlay { opacity:1; }
+        .video-card-body { flex:1; min-width:0; overflow:hidden; }
+        .video-card-title {
+            font-size:13px; font-weight:700; color:var(--text-primary);
+            line-height:1.4; margin-bottom:4px;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        }
+        .video-card-memo {
+            font-size:11px; color:var(--text-muted); line-height:1.5;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+            margin-bottom:3px;
+        }
+        .video-card-date { font-size:10px; color:var(--text-muted); }
+        .video-card-actions { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+        .video-move-row  { display:flex; gap:4px; }
+        .video-action-row { display:flex; gap:4px; }
+        .vmgmt-btn {
+            background:var(--bg-card); border:1.5px solid var(--border);
+            border-radius:7px; padding:5px 7px; font-size:11px; font-weight:700;
+            cursor:pointer; font-family:inherit; color:var(--text-secondary);
+            transition:background 0.1s; white-space:nowrap;
+        }
+        .vmgmt-btn:active { background:var(--border); }
+        .vmgmt-btn:disabled { opacity:0.3; cursor:default; pointer-events:none; }
+        .vmgmt-del { color:var(--danger); border-color:rgba(204,42,42,0.22); }
+        .vmgmt-del:active { background:rgba(204,42,42,0.08) !important; }
+        .video-inline-form {
+            background:var(--bg); border-radius:14px; padding:14px;
+            margin-bottom:10px; border:2px solid var(--accent-brown);
+        }
+        .video-inline-form .vif-field { margin-bottom:12px; }
+        .video-inline-form .vif-label {
+            display:block; font-size:13px; font-weight:700;
+            color:var(--text-primary); margin-bottom:5px;
+        }
+        .video-inline-form .form-input { padding:10px 12px; font-size:14px; border-radius:10px; }
+        .video-form-btns { display:flex; gap:8px; margin-top:12px; }
+        .btn-vm-save {
+            flex:1; background:var(--bg-header); color:white; border:none;
+            border-radius:10px; padding:12px; font-size:14px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+        }
+        .btn-vm-save:active { opacity:0.8; }
+        .btn-vm-cancel {
+            background:var(--bg-card); border:2px solid var(--border); color:var(--text-secondary);
+            border-radius:10px; padding:12px 16px; font-size:14px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+        }
+        .btn-vm-cancel:active { opacity:0.8; }
+        .video-mgmt-add-btn {
+            width:100%; background:var(--bg-card); border:2px dashed var(--border);
+            border-radius:12px; padding:13px; font-size:14px; font-weight:700;
+            color:var(--text-secondary); cursor:pointer; font-family:inherit;
+            display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px;
+            transition:all 0.15s;
+        }
+        .video-mgmt-add-btn:active { background:var(--bg); border-color:var(--accent-brown); color:var(--accent-brown); }
+
         /* Toast */
         #toast {
             position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -735,10 +811,10 @@ const DEFAULT_GEARS = [
       storageMethod:'収納袋にロール状にまとめ、棚Aに立てて保管。ポールは専用ケースに入れて横に。',
       pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf',
       videos:[
-          { title:'設営動画①（まず最初に見る）', url:'https://www.youtube.com/watch?v=2XTSgGJNW4M', memo:'内容：ペグダウン・ポール立ち上げ・ガイロープ調整・基本設営手順\nメモ：五角形をきれいに作るのが成功のコツ。' },
-          { title:'撤収動画', url:'https://www.youtube.com/watch?v=ZjZeq9Xj3So', memo:'内容：撤収手順・ポール収納・袋への収納方法\nメモ：初回撤収前に見ておくと収納で迷わない。' },
-          { title:'収納動画（公式）', url:'https://www.youtube.com/watch?v=dg8DIp8zg_8', memo:'内容：正しい畳み方・収納袋への入れ方\nメモ：撤収時に毎回確認用として便利。' },
-          { title:'設営のコツ', url:'', memo:'① 五角形を作る\n② 5か所ペグダウン\n③ テントを広げる\n④ センターポールを立てる\n⑤ ガイロープ調整\n\nサーカスSTは「五角形」が8割。\n先にポールを立てるより、五角形をきれいに作ることが重要。' },
+          { title:'設営動画①（まず最初に見る）', url:'https://www.youtube.com/watch?v=2XTSgGJNW4M', memo:'内容：ペグダウン・ポール立ち上げ・ガイロープ調整・基本設営手順\nメモ：五角形をきれいに作るのが成功のコツ。', addedAt:1717200000000 },
+          { title:'撤収動画', url:'https://www.youtube.com/watch?v=ZjZeq9Xj3So', memo:'内容：撤収手順・ポール収納・袋への収納方法\nメモ：初回撤収前に見ておくと収納で迷わない。', addedAt:1717200000000 },
+          { title:'収納動画（公式）', url:'https://www.youtube.com/watch?v=dg8DIp8zg_8', memo:'内容：正しい畳み方・収納袋への入れ方\nメモ：撤収時に毎回確認用として便利。', addedAt:1717200000000 },
+          { title:'設営のコツ', url:'', memo:'① 五角形を作る\n② 5か所ペグダウン\n③ テントを広げる\n④ センターポールを立てる\n⑤ ガイロープ調整\n\nサーカスSTは「五角形」が8割。\n先にポールを立てるより、五角形をきれいに作ることが重要。', addedAt:1717200000000 },
       ],
       setup:['グランドシートを広げ、テント本体を上に置く','全てのペグループを外に広げ、仮ペグで固定する（6か所）','テント中央にポールを立て、グロメットにポール先端を合わせる','ポールを伸ばしてテントを立ち上げる','形を整えながら全ペグを本固定する','ガイラインを6方向に張り、テンションを整えて完成'],
       takedown:['ガイラインを全て外す','ポールをゆっくり縮めてテントを降ろす','全ペグを回収する（6本確認）','内部の結露や汚れを拭き取る','テントを折りたたみ収納袋に入れる','帰宅後に必ず乾燥させてから保管'],
@@ -1001,6 +1077,149 @@ function toggleVideoAcc(i) {
 }
 
 // ============================================================
+// VIDEO MANAGEMENT — detail view CRUD
+// ============================================================
+function openVideoUrl(url) {
+    if (url) window.open(url, '_blank', 'noopener');
+}
+
+function getYtId(url) {
+    if (!url) return null;
+    const m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+}
+
+function getYtThumb(url) {
+    const id = getYtId(url);
+    return id ? 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg' : null;
+}
+
+function renderVideoMgmt(gearId, editingIdx) {
+    // editingIdx: undefined/null = normal list, -1 = add new form, 0..n = edit existing
+    const g = gears.find(x => x.id === gearId);
+    if (!g) return;
+    const container = document.getElementById('video-mgmt-list');
+    if (!container) return;
+    const videos = g.videos || [];
+
+    const badge = document.getElementById('video-count-badge');
+    if (badge) badge.textContent = videos.length ? '（' + videos.length + '件）' : '';
+
+    let html = '';
+    if (!videos.length && editingIdx !== -1) {
+        html = '<p style="font-size:13px;color:var(--text-muted);padding:4px 0 6px;margin:0;">動画が登録されていません</p>';
+    } else {
+        html = videos.map((v, i) =>
+            (editingIdx === i) ? _videoFormHTML(gearId, i, v) : _videoCardHTML(gearId, i, v, videos.length)
+        ).join('');
+    }
+    if (editingIdx === -1) html += _videoFormHTML(gearId, -1, null);
+    container.innerHTML = html;
+
+    const addBtn = document.getElementById('video-mgmt-add-btn');
+    if (addBtn) addBtn.style.display = (editingIdx === -1) ? 'none' : '';
+}
+
+function _videoCardHTML(gearId, idx, v, total) {
+    const thumb = getYtThumb(v.url);
+    const hasUrl = !!v.url;
+    const urlData = hasUrl ? ' data-url="' + esc(v.url) + '" onclick="openVideoUrl(this.dataset.url)"' : '';
+    const thumbInner = thumb
+        ? '<img class="video-thumb" src="' + esc(thumb) + '" alt="" loading="lazy"'
+          + ' onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
+          + '<div class="video-thumb-none" style="display:none;">🎬</div>'
+        : '<div class="video-thumb-none">🎬</div>';
+    const dateStr = v.addedAt
+        ? new Date(v.addedAt).toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' })
+        : '';
+    return `<div class="video-mgmt-card">
+        <div class="video-thumb-wrap"${urlData} style="${hasUrl ? 'cursor:pointer;' : ''}">
+            ${thumbInner}
+            ${hasUrl ? '<div class="video-play-overlay">▶</div>' : ''}
+        </div>
+        <div class="video-card-body">
+            <div class="video-card-title"${urlData} style="${hasUrl ? 'cursor:pointer;color:var(--accent-brown);' : ''}">
+                ${esc(v.title || '（タイトルなし）')}
+            </div>
+            ${v.memo ? '<div class="video-card-memo">' + esc(v.memo) + '</div>' : ''}
+            ${dateStr ? '<div class="video-card-date">' + dateStr + '</div>' : ''}
+        </div>
+        <div class="video-card-actions">
+            <div class="video-move-row">
+                <button class="vmgmt-btn" onclick="moveVideo('${gearId}',${idx},-1)" ${idx === 0 ? 'disabled' : ''} title="上へ">↑</button>
+                <button class="vmgmt-btn" onclick="moveVideo('${gearId}',${idx},1)" ${idx === total - 1 ? 'disabled' : ''} title="下へ">↓</button>
+            </div>
+            <div class="video-action-row">
+                <button class="vmgmt-btn" style="color:var(--accent-brown);" onclick="renderVideoMgmt('${gearId}',${idx})">編集</button>
+                <button class="vmgmt-btn vmgmt-del" onclick="deleteVideo('${gearId}',${idx})">削除</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function _videoFormHTML(gearId, idx, v) {
+    const isNew = idx === -1;
+    return `<div class="video-inline-form">
+        <div class="vif-field">
+            <label class="vif-label">タイトル</label>
+            <input class="form-input" type="text" id="vf-title" value="${esc(v ? v.title : '')}" placeholder="例：設営動画">
+        </div>
+        <div class="vif-field">
+            <label class="vif-label">YouTube URL</label>
+            <input class="form-input" type="url" id="vf-url" value="${esc(v ? v.url : '')}" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="vif-field" style="margin-bottom:0;">
+            <label class="vif-label">メモ</label>
+            <textarea class="form-input" id="vf-memo" rows="3" placeholder="動画のポイントなどを入力…">${esc(v ? v.memo : '')}</textarea>
+        </div>
+        <div class="video-form-btns">
+            <button class="btn-vm-save" onclick="saveVideoEdit('${gearId}',${idx})">${isNew ? '＋ 追加する' : '💾 保存する'}</button>
+            <button class="btn-vm-cancel" onclick="renderVideoMgmt('${gearId}')">キャンセル</button>
+        </div>
+    </div>`;
+}
+
+function saveVideoEdit(gearId, idx) {
+    const g = gears.find(x => x.id === gearId);
+    if (!g) return;
+    if (!g.videos) g.videos = [];
+    const title = (document.getElementById('vf-title')?.value || '').trim();
+    const url   = (document.getElementById('vf-url')?.value   || '').trim();
+    const memo  = (document.getElementById('vf-memo')?.value  || '').trim();
+    if (!title && !url && !memo) { showToast('タイトルまたはURLを入力してください'); return; }
+    if (idx === -1) {
+        g.videos.push({ title, url, memo, addedAt: Date.now() });
+    } else {
+        g.videos[idx] = { ...(g.videos[idx] || {}), title, url, memo };
+    }
+    saveGears();
+    renderVideoMgmt(gearId);
+    showToast(idx === -1 ? '動画を追加しました ✓' : '保存しました ✓');
+}
+
+function deleteVideo(gearId, idx) {
+    const g = gears.find(x => x.id === gearId);
+    if (!g || !g.videos) return;
+    const v = g.videos[idx];
+    if (!v) return;
+    if (!confirm('「' + (v.title || 'この動画') + '」を削除しますか？\n\nこの操作は元に戻せません。')) return;
+    g.videos.splice(idx, 1);
+    saveGears();
+    renderVideoMgmt(gearId);
+    showToast('削除しました');
+}
+
+function moveVideo(gearId, idx, dir) {
+    const g = gears.find(x => x.id === gearId);
+    if (!g || !g.videos) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= g.videos.length) return;
+    [g.videos[idx], g.videos[newIdx]] = [g.videos[newIdx], g.videos[idx]];
+    saveGears();
+    renderVideoMgmt(gearId);
+}
+
+// ============================================================
 // NAVIGATION
 // ============================================================
 const SCREEN_META = {
@@ -1163,6 +1382,7 @@ function showGearDetail(id) {
     historyStack.push(currentScreen);
     document.getElementById('gear-detail-content').innerHTML =
         g.category==='テント' ? buildTentDetail(g) : buildStandardDetail(g);
+    renderVideoMgmt(id);
     _activate('gear-detail');
 }
 
@@ -1207,7 +1427,13 @@ function buildTentDetail(g) {
             ${pdfRowHTML(g)}
             ${specs}
         </div>
-        ${videoAccordionHTML(g)}
+        <div class="detail-section" id="video-mgmt-section">
+            <div class="detail-section-title">
+                🎬 動画<span id="video-count-badge" style="font-size:12px;font-weight:400;color:var(--text-muted);margin-left:4px;"></span>
+            </div>
+            <div id="video-mgmt-list"></div>
+            <button class="video-mgmt-add-btn" id="video-mgmt-add-btn" onclick="renderVideoMgmt('${g.id}',-1)">＋ 動画追加</button>
+        </div>
     `;
 }
 
@@ -1237,7 +1463,13 @@ function buildStandardDetail(g) {
         ${(g.takedown||[]).length?`<div class="detail-section"><div class="detail-section-title">⬇️ 撤収・片付け手順</div><ul class="step-list">${steps(g.takedown,'#5C4A35')}</ul></div>`:''}
         ${g.storageMethod?`<div class="detail-section"><div class="detail-section-title">📦 収納方法</div><div class="video-note">${esc(g.storageMethod)}</div></div>`:''}
         ${g.caution?`<div class="detail-section"><div class="detail-section-title">⚠️ 注意点</div><div class="caution-box"><span class="caution-icon">⚠️</span><span class="caution-text">${esc(g.caution)}</span></div></div>`:''}
-        ${videoAccordionHTML(g)}
+        <div class="detail-section" id="video-mgmt-section">
+            <div class="detail-section-title">
+                🎬 動画<span id="video-count-badge" style="font-size:12px;font-weight:400;color:var(--text-muted);margin-left:4px;"></span>
+            </div>
+            <div id="video-mgmt-list"></div>
+            <button class="video-mgmt-add-btn" id="video-mgmt-add-btn" onclick="renderVideoMgmt('${g.id}',-1)">＋ 動画追加</button>
+        </div>
     `;
 }
 
