@@ -745,6 +745,17 @@
 
 <!-- ==============================  CHECKLIST  ============================== -->
 <div class="screen" id="screen-checklist">
+    <div class="card" style="margin-bottom:14px;padding:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:12px;">🗓 キャンプ情報</div>
+        <div style="margin-bottom:10px;">
+            <label style="display:block;font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:5px;" for="trip-date">キャンプ日</label>
+            <input class="form-input" type="date" id="trip-date" oninput="saveTripField('date',this.value)" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+            <label style="display:block;font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:5px;" for="trip-dest">行き先</label>
+            <input class="form-input" type="text" id="trip-dest" placeholder="例：波戸岬キャンプ場" oninput="saveTripField('destination',this.value)" style="width:100%;box-sizing:border-box;">
+        </div>
+    </div>
     <div class="check-progress">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -789,8 +800,10 @@
 // ============================================================
 // CONSTANTS
 // ============================================================
-const STORAGE_KEY     = 'camp_gears_app_v1';
-const PDF_STORAGE_KEY = 'camp_manuals_v1';
+const STORAGE_KEY          = 'camp_gears_app_v1';
+const PDF_STORAGE_KEY      = 'camp_manuals_v1';
+const CHECKLIST_STATE_KEY  = 'camp_checklist_v1';
+const CHECKLIST_TRIP_KEY   = 'camp_trip_v1';
 
 const TENT_TAG_DEF = {
     solo:     { label:'👤 ソロ向き',      color:'#C4723A', bg:'#FFF0E6' },
@@ -829,8 +842,8 @@ const GARAGE_LOCATION_MAP = [
 ];
 
 const CHECKLIST = [
-    { cat:'⛺ テント・シェルター', items:['テンマクデザイン サーカスS','Snow Peak ヴォールト','TOMOUNT パップテント（軍幕TC）','雑貨の国のアリス ワンタッチドーム','DesertFox ロッジ型テント','ペグ・ハンマー','グランドシート','タープ・ポール'] },
-    { cat:'🛌 寝具', items:['モンベル ダウンハガー800','インフレータブルマット','枕','毛布（冬季）'] },
+    { cat:'⛺ テント・シェルター', items:['テンマクデザイン サーカスST','Snow Peak ヴォールト','TOMOUNT パップテント（軍幕TC）','雑貨の国のアリス ワンタッチドーム','DesertFox ロッジ型テント','ペグ・ハンマー','グランドシート','タープ・ポール'] },
+    { cat:'🛌 寝具', items:['soomloom マミー型 ダウン（-15〜0℃）','JP寝袋 封筒型 2人用（-5〜+25℃）','ICECO マミー型 冬用（-25℃耐寒）','オールシーズン寝袋 封筒型（-15〜20℃）','中古寝袋夏用 封筒型 MILFORT（MF607SB）','インフレータブルマット','枕','毛布（冬季）'] },
     { cat:'🍳 調理・食事', items:['SOTOレギュレーターストーブ','CB缶ガス（予備含む3本）','クッカー・鍋','箸・スプーン・フォーク','まな板・包丁','ゴミ袋','食材・調味料'] },
     { cat:'💡 照明', items:['Goal Zero ライトハウスマイクロ','ランタン（メイン）','予備電池・モバイルバッテリー'] },
     { cat:'🔥 焚き火', items:['スノーピーク 焚き火台M','焚き火シート','薪（現地調達 or 持参）','着火剤・ライター','革手袋','トング・火ばさみ'] },
@@ -979,6 +992,7 @@ let filterCat     = 'all';
 let pdfFilterCat  = 'all';
 const compTags    = new Set();
 const checkState  = {};
+let tripInfo      = { date: '', destination: '' };
 let editingId     = null; // null = new gear
 let editingVideos = [];
 
@@ -1007,6 +1021,36 @@ function loadManuals() {
 
 function saveManuals() {
     localStorage.setItem(PDF_STORAGE_KEY, JSON.stringify(manuals));
+}
+
+function loadCheckState() {
+    try {
+        const raw = localStorage.getItem(CHECKLIST_STATE_KEY);
+        if (raw) {
+            const saved = JSON.parse(raw);
+            Object.assign(checkState, saved);
+        }
+    } catch(e) {}
+}
+
+function saveCheckState() {
+    localStorage.setItem(CHECKLIST_STATE_KEY, JSON.stringify(checkState));
+}
+
+function loadTripInfo() {
+    try {
+        const raw = localStorage.getItem(CHECKLIST_TRIP_KEY);
+        if (raw) tripInfo = JSON.parse(raw);
+    } catch(e) {}
+    const dateEl = document.getElementById('trip-date');
+    const destEl = document.getElementById('trip-dest');
+    if (dateEl) dateEl.value = tripInfo.date || '';
+    if (destEl) destEl.value = tripInfo.destination || '';
+}
+
+function saveTripField(field, value) {
+    tripInfo[field] = value;
+    localStorage.setItem(CHECKLIST_TRIP_KEY, JSON.stringify(tripInfo));
 }
 
 function generateId() {
@@ -2077,6 +2121,7 @@ function toggleCheck(key) {
     el.classList.toggle('checked', checked);
     el.querySelector('.check-box').textContent = checked ? '✓' : '';
     updateProgress();
+    saveCheckState();
 }
 
 function updateProgress() {
@@ -2092,6 +2137,7 @@ function updateProgress() {
 function resetChecklist() {
     if (!confirm('チェックをリセットしますか？')) return;
     Object.keys(checkState).forEach(k=>delete checkState[k]);
+    saveCheckState();
     buildChecklist();
 }
 
@@ -2187,6 +2233,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     saveGears();
     manuals = loadManuals();
     saveManuals();
+    loadCheckState();
     rebuildFilterBar();
     renderGearList();
     buildHome();
@@ -2194,6 +2241,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     buildChecklist();
     buildGarageMap();
     updateHomeStats();
+    loadTripInfo();
 });
 </script>
 </body>
