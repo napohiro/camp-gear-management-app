@@ -21,14 +21,15 @@ const MANUALS_REGISTRY = {
         note:     'テンマクデザイン サーカスS 取扱説明書',
     },
 
+    // ✅ 登録済み
+    't1': {
+        path:     'public/manuals/snowpeak_vault.pdf',
+        filename: 'snowpeak_vault.pdf',
+        note:     'Snow Peak ヴォールト 取扱説明書',
+    },
+
     // ── 以下は未登録 ──
     // PDFを入手したらコメントを外してパスを設定してください
-
-    // 't1': {
-    //     path:     'public/manuals/snopeak_vault.pdf',
-    //     filename: 'snopeak_vault.pdf',
-    //     note:     'Snow Peak ヴォールト 取扱説明書',
-    // },
     // 't2': {
     //     path:     'public/manuals/tomount_pup_tc.pdf',
     //     filename: 'tomount_pup_tc.pdf',
