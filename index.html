@@ -252,7 +252,7 @@
         }
         .caution-icon { font-size:18px; flex-shrink:0; }
         .caution-text { font-size:13px; color:var(--warn-text); line-height:1.7; }
-        .video-note  { background:var(--bg); border-radius:12px; padding:14px; font-size:13px; color:var(--text-secondary); line-height:1.7; }
+        .video-note  { background:var(--bg); border-radius:12px; padding:14px; font-size:13px; color:var(--text-secondary); line-height:1.7; white-space:pre-line; }
         .features-text { font-size:14px; color:var(--text-primary); line-height:1.75; white-space:pre-line; }
 
         /* Detail action bar */
@@ -680,7 +680,7 @@ const DEFAULT_GEARS = [
       setupDifficulty:3, recommendedPeople:'2〜4人', tentTags:['solo','duo','family','easy'],
       photoGradient:'linear-gradient(135deg,#8B6B4A,#4A2E18)', storage:'棚A',
       storageMethod:'収納袋にロール状にまとめ、棚Aに立てて保管。ポールは専用ケースに入れて横に。',
-      pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf', video:'YouTube: "テンマクデザイン サーカスS 設営" で検索',
+      pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf', video:'■ 設営動画①（まず最初に見る）\nサーカスST DX 設営＆張り方紹介\nhttps://www.youtube.com/watch?v=2XTSgGJNW4M\n内容：ペグダウン・ポール立ち上げ・ガイロープ調整・基本設営手順\nメモ：五角形をきれいに作るのが成功のコツ。\n\n■ 撤収動画\nサーカスST 撤収編\nhttps://www.youtube.com/watch?v=ZjZeq9Xj3So\n内容：撤収手順・ポール収納・袋への収納方法\nメモ：初回撤収前に見ておくと収納で迷わない。\n\n■ 収納動画（公式）\nテンマク公式 サーカスシリーズ収納方法\nhttps://www.youtube.com/watch?v=dg8DIp8zg_8\n内容：正しい畳み方・収納袋への入れ方\nメモ：撤収時に毎回確認用として便利。\n\n【設営のコツ】\n① 五角形を作る\n② 5か所ペグダウン\n③ テントを広げる\n④ センターポールを立てる\n⑤ ガイロープ調整\n\nサーカスSTは「五角形」が8割。\n先にポールを立てるより、五角形をきれいに作ることが重要。',
       setup:['グランドシートを広げ、テント本体を上に置く','全てのペグループを外に広げ、仮ペグで固定する（6か所）','テント中央にポールを立て、グロメットにポール先端を合わせる','ポールを伸ばしてテントを立ち上げる','形を整えながら全ペグを本固定する','ガイラインを6方向に張り、テンションを整えて完成'],
       takedown:['ガイラインを全て外す','ポールをゆっくり縮めてテントを降ろす','全ペグを回収する（6本確認）','内部の結露や汚れを拭き取る','テントを折りたたみ収納袋に入れる','帰宅後に必ず乾燥させてから保管'],
       caution:'ペグは必ず6本以上打つこと。強風時はガイラインを必ず張る。ポールが中央にあるため移動動線に注意。', specs:{タイプ:'ワンポールテント',収納場所:'棚A'} },
@@ -824,6 +824,17 @@ function tentTagPills(tags) {
 
 function esc(s) {
     return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function videoNoteHTML(text) {
+    return (text||'').split('\n').map(line => {
+        const trimmed = line.trim();
+        if (/^https?:\/\/\S+$/.test(trimmed)) {
+            const url = esc(trimmed);
+            return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-brown);word-break:break-all;text-decoration:underline;">${url}</a>`;
+        }
+        return esc(line);
+    }).join('\n');
 }
 
 function textareaToSteps(text) {
@@ -1034,7 +1045,7 @@ function buildTentDetail(g) {
             ${pdfRowHTML(g)}
             ${specs}
         </div>
-        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${esc(g.video)}</div></div>`:''}
+        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${videoNoteHTML(g.video)}</div></div>`:''}
     `;
 }
 
@@ -1064,7 +1075,7 @@ function buildStandardDetail(g) {
         ${(g.takedown||[]).length?`<div class="detail-section"><div class="detail-section-title">⬇️ 撤収・片付け手順</div><ul class="step-list">${steps(g.takedown,'#5C4A35')}</ul></div>`:''}
         ${g.storageMethod?`<div class="detail-section"><div class="detail-section-title">📦 収納方法</div><div class="video-note">${esc(g.storageMethod)}</div></div>`:''}
         ${g.caution?`<div class="detail-section"><div class="detail-section-title">⚠️ 注意点</div><div class="caution-box"><span class="caution-icon">⚠️</span><span class="caution-text">${esc(g.caution)}</span></div></div>`:''}
-        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${esc(g.video)}</div></div>`:''}
+        ${g.video?`<div class="detail-section"><div class="detail-section-title">🎬 動画メモ</div><div class="video-note">${videoNoteHTML(g.video)}</div></div>`:''}
     `;
 }
 
