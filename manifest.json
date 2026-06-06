@@ -1,0 +1,11 @@
+{
+  "name": "CAMPギア管理アプリ",
+  "short_name": "CAMPギア",
+  "icons": [
+    { "src": "public/top.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F0EAE0",
+  "theme_color": "#3D2C1E"
+}

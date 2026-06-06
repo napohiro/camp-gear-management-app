@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CAMPギア管理アプリ</title>
+    <link rel="icon" type="image/png" href="public/top.png">
+    <link rel="apple-touch-icon" href="public/top.png">
+    <link rel="manifest" href="manifest.json">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         :root {
@@ -250,7 +253,7 @@
         .caution-icon { font-size:18px; flex-shrink:0; }
         .caution-text { font-size:13px; color:var(--warn-text); line-height:1.7; }
         .video-note  { background:var(--bg); border-radius:12px; padding:14px; font-size:13px; color:var(--text-secondary); line-height:1.7; }
-        .features-text { font-size:14px; color:var(--text-primary); line-height:1.75; }
+        .features-text { font-size:14px; color:var(--text-primary); line-height:1.75; white-space:pre-line; }
 
         /* Detail action bar */
         .detail-actions { display:flex; gap:10px; margin-bottom:20px; }
@@ -549,9 +552,6 @@
 
     <div id="gear-list-items"></div>
 
-    <div style="text-align:center; padding:24px 0 8px;">
-        <button class="reset-demo-btn" onclick="resetToDefaults()">🔄 デモデータに戻す</button>
-    </div>
 </div>
 
 <!-- ==============================  GEAR DETAIL  ============================== -->
@@ -674,10 +674,10 @@ const CHECKLIST = [
 // DEFAULT GEARS
 // ============================================================
 const DEFAULT_GEARS = [
-    { id:'t0', name:'サーカスS', maker:'テンマクデザイン', category:'テント', tentType:'ワンポールテント', emoji:'⛺',
-      tagline:'ワンポールの雰囲気系ソロテント',
-      features:'とんがり形でソロキャン向き。焚き火や静かなキャンプに合うロマン系テント。雰囲気と機能を両立した一張り。',
-      setupDifficulty:3, recommendedPeople:'1人（ソロ）', tentTags:['solo','campfire'],
+    { id:'t0', name:'サーカスST', maker:'テンマクデザイン', category:'テント', tentType:'ワンポールテント', emoji:'⛺',
+      tagline:'ソロ快適、ファミリーも使えるワンポールテント',
+      features:'サーカスSTは、2〜4人向けのワンポールテント。\nソロキャンプではかなり快適に広く使え、デュオでも余裕がある。\n少人数ファミリーでも使用可能で、荷物を置いても過ごしやすい広さがある。\nポリエステル素材なのでTC素材より軽く、乾きやすく、雨の日や撤収時にも扱いやすい。\n焚き火の火の粉にはTC素材より弱いため、焚き火をする場合は距離をしっかり取る。\n\n向いているキャンプ：\n・ソロキャンプ\n・デュオキャンプ\n・少人数ファミリーキャンプ\n・雨が心配なキャンプ\n・広めに快適に過ごしたいキャンプ',
+      setupDifficulty:3, recommendedPeople:'2〜4人', tentTags:['solo','duo','family','easy'],
       photoGradient:'linear-gradient(135deg,#8B6B4A,#4A2E18)', storage:'棚A',
       storageMethod:'収納袋にロール状にまとめ、棚Aに立てて保管。ポールは専用ケースに入れて横に。',
       pdf:'TenmakuDesign_CircusS_manual.pdf', pdfPath:'public/manuals/circus_st.pdf', video:'YouTube: "テンマクデザイン サーカスS 設営" で検索',
