@@ -118,43 +118,82 @@
             overflow-x:auto; padding-bottom:4px; scrollbar-width:none;
         }
         .gear-filter::-webkit-scrollbar { display:none; }
-        .filter-btn {
-            background:var(--bg-card); border:2px solid var(--border);
-            border-radius:20px; padding:7px 14px; font-size:13px; font-weight:600;
-            color:var(--text-secondary); cursor:pointer; white-space:nowrap;
-            font-family:inherit; transition:all 0.15s;
+        /* ===== CATEGORY CHIPS ===== */
+        .cat-chip {
+            display:flex; flex-direction:column; align-items:center; gap:2px;
+            border:2px solid; border-radius:14px; padding:8px 11px;
+            font-family:inherit; cursor:pointer; white-space:nowrap;
+            transition:all 0.15s; flex-shrink:0; min-width:54px;
         }
-        .filter-btn.active { background:var(--bg-header); border-color:var(--bg-header); color:white; }
+        .cat-chip-icon  { font-size:20px; line-height:1.2; }
+        .cat-chip-name  { font-size:10px; font-weight:700; }
+        .cat-chip-count { font-size:10px; font-weight:600; opacity:0.7; }
 
-        /* Standard gear card */
+        /* ===== GEAR CARD (redesigned) ===== */
         .gear-card {
-            background:var(--bg-card); border-radius:16px; padding:14px 16px;
-            margin-bottom:10px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
-            display:flex; align-items:center; gap:14px;
+            background:var(--bg-card); border-radius:16px; padding:12px 14px;
+            margin-bottom:10px; box-shadow:0 2px 8px var(--shadow);
+            border:1px solid var(--border); border-left-width:4px;
+            display:flex; align-items:flex-start; gap:12px;
             cursor:pointer; transition:transform 0.1s;
         }
         .gear-card:active { transform:scale(0.98); }
-        .gear-emoji {
-            font-size:34px; min-width:52px; text-align:center;
-            background:var(--bg); border-radius:12px; padding:8px 6px; line-height:1.1;
+        .gear-card-media { flex-shrink:0; }
+        .gear-card-photo {
+            width:66px; height:66px; object-fit:cover; border-radius:12px; display:block;
+        }
+        .gear-card-icon {
+            width:66px; height:66px; border-radius:12px; border:1.5px solid;
+            display:flex; align-items:center; justify-content:center; font-size:30px;
         }
         .gear-info { flex:1; min-width:0; }
-        .gear-name  { font-size:15px; font-weight:700; margin-bottom:2px; }
-        .gear-maker { font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+        .gear-name  { font-size:15px; font-weight:700; margin-bottom:1px; }
+        .gear-maker { font-size:12px; color:var(--text-muted); margin-bottom:4px; }
+        .gear-card-tagline { font-size:12px; color:var(--text-muted); margin-bottom:5px; line-height:1.4; }
+        .gear-card-meta { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:4px; }
         .tag {
             display:inline-block; background:var(--bg); border:1px solid var(--border);
-            border-radius:6px; padding:2px 8px; font-size:11px; color:var(--text-secondary); font-weight:600;
+            border-radius:6px; padding:2px 7px; font-size:10px; color:var(--text-secondary); font-weight:600;
         }
-        .gear-storage { font-size:11px; color:var(--text-muted); margin-left:6px; }
-        .gear-card-actions { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
+        .pdf-badge {
+            display:inline-flex; align-items:center; background:#E8F4FF; border:1px solid #90C0E0;
+            border-radius:6px; padding:2px 6px; font-size:10px; color:#2A5A8A; font-weight:600;
+        }
+        .gear-storage { font-size:11px; color:var(--text-muted); }
+        .gear-card-actions { display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; }
         .gear-edit-btn {
-            background:var(--bg); border:1.5px solid var(--border); color:var(--text-muted);
-            font-size:15px; width:32px; height:32px; border-radius:8px;
+            background:rgba(255,255,255,0.6); border:1.5px solid var(--border); color:var(--text-muted);
+            font-size:14px; width:30px; height:30px; border-radius:8px;
             cursor:pointer; display:flex; align-items:center; justify-content:center;
             transition:all 0.15s;
         }
         .gear-edit-btn:active { background:var(--border); }
-        .gear-arrow { color:var(--text-muted); font-size:20px; }
+        .gear-delete-btn {
+            background:rgba(255,255,255,0.6); border:1.5px solid #e8b0a0; color:#c0392b;
+            font-size:14px; width:30px; height:30px; border-radius:8px;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:all 0.15s;
+        }
+        .gear-delete-btn:active { background:#ffe0d8; }
+
+        /* ===== GEAR IMAGE UPLOAD ===== */
+        .gear-img-upload-label {
+            display:inline-flex; align-items:center; gap:6px;
+            background:var(--bg-card); border:2px solid var(--border); border-radius:10px;
+            padding:8px 14px; font-size:13px; font-weight:700; color:var(--accent-brown);
+            cursor:pointer; font-family:inherit; transition:all 0.15s;
+        }
+        .gear-img-upload-label:active { background:var(--border); }
+        .gear-img-remove-btn {
+            background:var(--bg-card); border:2px solid #e8b0a0; border-radius:10px;
+            padding:8px 12px; font-size:13px; font-weight:700; color:#c0392b;
+            cursor:pointer; font-family:inherit; transition:all 0.15s;
+        }
+        .gear-list-hint {
+            font-size:12px; color:var(--text-muted); line-height:1.6;
+            background:var(--bg-card); border-radius:12px; padding:10px 14px;
+            border:1px solid var(--border); margin-bottom:12px;
+        }
 
         /* ===== TENT CARD ===== */
         .tent-card {
@@ -694,7 +733,8 @@
     <button class="add-gear-btn" onclick="showAddGear()">
         <span style="font-size:22px;">＋</span> ギアを追加する
     </button>
-    <input class="search-bar" type="text" placeholder="🔍 ギア名・メーカーで検索…" id="gear-search" oninput="renderGearList()">
+    <div class="gear-list-hint">カテゴリを選ぶと、必要なギアだけをすぐ確認できます。写真を登録すると、キャンプ前の準備がもっと分かりやすくなります。</div>
+    <input class="search-bar" type="text" placeholder="🔍 ギア名・メーカー・カテゴリ・収納場所で検索…" id="gear-search" oninput="renderGearList()">
     <div class="gear-filter" id="filter-bar"></div>
 
     <!-- テント比較セクション -->
@@ -853,6 +893,20 @@ const CAT_ICONS = {
 };
 
 const CATEGORIES = ['テント','タープ','焚き火台','ランタン','バーナー','調理器具','クーラー','寝袋・マット','収納','その他ギア'];
+
+const CAT_COLORS = {
+    'テント':      { bg:'#F5F0E8', border:'#C8B896', text:'#6B5340' },
+    'タープ':      { bg:'#EEF3E8', border:'#B4C8A0', text:'#486B38' },
+    '焚き火台':    { bg:'#FFF0E6', border:'#E8B48A', text:'#8B4A28' },
+    'ランタン':    { bg:'#FFFBE6', border:'#E8D870', text:'#7A6B20' },
+    'バーナー':    { bg:'#FFF4E6', border:'#E8C090', text:'#8B5A28' },
+    '調理器具':    { bg:'#FAF5EC', border:'#D4C09A', text:'#6B5540' },
+    'クーラー':    { bg:'#E8F4FF', border:'#90BEDD', text:'#2A5A8A' },
+    '寝袋・マット':{ bg:'#EAF5EB', border:'#90C89A', text:'#2A6A40' },
+    '収納':        { bg:'#F5EDE8', border:'#C8AA90', text:'#6A4A38' },
+    'その他ギア':  { bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' },
+};
+const CAT_COLORS_DEFAULT = { bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' };
 
 const GRADIENT_PRESETS = [
     { name:'ウォームブラウン', value:'linear-gradient(135deg,#8B6B4A,#4A2E18)' },
@@ -1495,19 +1549,32 @@ function updateHomeStats() {
 function rebuildFilterBar() {
     const cats = [...new Set(gears.map(g=>g.category).filter(Boolean))].sort();
     const fb = document.getElementById('filter-bar');
-    const activeCat = filterCat;
-    fb.innerHTML = `<button class="filter-btn${activeCat==='all'?' active':''}" data-cat="all" onclick="setFilter(this,this.dataset.cat)">すべて</button>` +
-        cats.map(c=>`<button class="filter-btn${activeCat===c?' active':''}" data-cat="${esc(c)}" onclick="setFilter(this,this.dataset.cat)">${CAT_ICONS[c]||'📋'} ${esc(c)}</button>`).join('');
+
+    const chip = (cat, icon, label, count) => {
+        const isActive = filterCat === cat;
+        const col = CAT_COLORS[cat] || CAT_COLORS_DEFAULT;
+        const style = isActive
+            ? `background:${col.text};border-color:${col.text};color:#fff;`
+            : `background:${col.bg};border-color:${col.border};color:${col.text};`;
+        return `<button class="cat-chip${isActive?' active':''}" data-cat="${esc(cat)}"
+            style="${style}" onclick="setFilter(this.dataset.cat)">
+            <span class="cat-chip-icon">${icon}</span>
+            <span class="cat-chip-name">${esc(label)}</span>
+            <span class="cat-chip-count">${count}</span>
+        </button>`;
+    };
+
+    fb.innerHTML = chip('all','🏕️','すべて', gears.length) +
+        cats.map(c => chip(c, CAT_ICONS[c]||'📋', c, gears.filter(g=>g.category===c).length)).join('');
 }
 
-function setFilter(btn, cat) {
-    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
+function setFilter(cat) {
     filterCat = cat;
     compTags.clear();
     document.querySelectorAll('.comp-tag').forEach(b=>b.classList.remove('active'));
     document.getElementById('comparison-section').style.display    = cat==='テント'      ? 'block' : 'none';
     document.getElementById('sb-comparison-section').style.display = cat==='寝袋・マット' ? 'block' : 'none';
+    rebuildFilterBar();
     renderGearList();
 }
 
@@ -1522,7 +1589,12 @@ function renderGearList() {
     const search = (document.getElementById('gear-search').value||'').trim();
     let filtered = gears.filter(g=>{
         const matchCat    = filterCat==='all' || g.category===filterCat;
-        const matchSearch = !search || (g.name||'').includes(search) || (g.maker||'').includes(search);
+        const matchSearch = !search ||
+            (g.name||'').includes(search) || (g.maker||'').includes(search) ||
+            (g.category||'').includes(search) || (g.storage||'').includes(search) ||
+            (g.tagline||'').includes(search) ||
+            (g.tentTags||[]).some(t=>{ const d=TENT_TAG_DEF[t]; return d&&d.label.includes(search); }) ||
+            (g.sleepingBagTags||[]).some(t=>{ const d=SLEEPING_BAG_TAG_DEF[t]; return d&&d.label.includes(search); });
         return matchCat && matchSearch;
     });
     if (filterCat==='テント' && compTags.size>0) {
@@ -1572,19 +1644,39 @@ function tentCardHTML(g) {
     </div>`;
 }
 
+function _gearMediaHTML(g) {
+    const col = CAT_COLORS[g.category] || CAT_COLORS_DEFAULT;
+    if (g.gearImage) {
+        return `<div class="gear-card-media"><img src="${g.gearImage}" alt="" class="gear-card-photo"
+            onerror="this.style.display='none';this.nextSibling.style.display='flex';">
+            <div class="gear-card-icon" style="display:none;background:${col.bg};border-color:${col.border};">${esc(g.emoji||CAT_ICONS[g.category]||'📦')}</div></div>`;
+    }
+    return `<div class="gear-card-media"><div class="gear-card-icon" style="background:${col.bg};border-color:${col.border};">${esc(g.emoji||CAT_ICONS[g.category]||'📦')}</div></div>`;
+}
+
+function _gearPdfBadge(g) {
+    const hasPdf = !!(g.pdf || manuals.some(m => m.gearName === g.name && m.pdfPath));
+    return hasPdf ? `<span class="pdf-badge">📄 取説</span>` : '';
+}
+
 function gearCardHTML(g) {
+    const col = CAT_COLORS[g.category] || CAT_COLORS_DEFAULT;
     return `
-    <div class="gear-card" onclick="showGearDetail('${g.id}')">
-        <div class="gear-emoji">${esc(g.emoji||'📦')}</div>
+    <div class="gear-card" style="border-left-color:${col.border};" onclick="showGearDetail('${g.id}')">
+        ${_gearMediaHTML(g)}
         <div class="gear-info">
             <div class="gear-name">${esc(g.name)}</div>
-            <div class="gear-maker">${esc(g.maker)}</div>
-            <span class="tag">${esc(g.category)}</span>
-            <span class="gear-storage">📍 ${esc(g.storage)}</span>
+            ${g.maker ? `<div class="gear-maker">${esc(g.maker)}</div>` : ''}
+            ${g.tagline ? `<div class="gear-card-tagline">${esc(g.tagline)}</div>` : ''}
+            <div class="gear-card-meta">
+                <span class="tag">${esc(g.category)}</span>
+                ${_gearPdfBadge(g)}
+                ${g.storage ? `<span class="gear-storage">📍 ${esc(g.storage)}</span>` : ''}
+            </div>
         </div>
         <div class="gear-card-actions">
-            <button class="gear-edit-btn" onclick="event.stopPropagation();showEditGear('${g.id}')" title="編集">✏️</button>
-            <span class="gear-arrow">›</span>
+            <button class="gear-edit-btn"   title="編集" onclick="event.stopPropagation();showEditGear('${g.id}')">✏️</button>
+            <button class="gear-delete-btn" title="削除" onclick="event.stopPropagation();confirmDeleteGear('${g.id}')">🗑️</button>
         </div>
     </div>`;
 }
@@ -1597,22 +1689,26 @@ function sleepingBagTagPills(tags) {
 }
 
 function sleepingBagCardHTML(g) {
+    const col       = CAT_COLORS['寝袋・マット'];
     const tagPills  = sleepingBagTagPills(g.sleepingBagTags);
     const tempRange = (g.specs||{})['快適温度'] || '';
     return `
-    <div class="gear-card" onclick="showGearDetail('${g.id}')">
-        <div class="gear-emoji">${esc(g.emoji||'🛌')}</div>
-        <div class="gear-info" style="flex:1;min-width:0;">
+    <div class="gear-card" style="border-left-color:${col.border};" onclick="showGearDetail('${g.id}')">
+        ${_gearMediaHTML(g)}
+        <div class="gear-info">
             <div class="gear-name">${esc(g.name)}</div>
-            <div class="gear-maker">${esc(g.maker||'')}</div>
-            ${g.tagline?`<div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.4;">${esc(g.tagline)}</div>`:''}
-            ${tempRange?`<div style="font-size:12px;color:var(--text-muted);margin-top:3px;">🌡️ ${esc(tempRange)}</div>`:''}
-            ${tagPills?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tagPills}</div>`:''}
-            <span class="gear-storage" style="margin-top:4px;display:block;">📍 ${esc(g.storage)}</span>
+            ${g.maker ? `<div class="gear-maker">${esc(g.maker)}</div>` : ''}
+            ${g.tagline ? `<div class="gear-card-tagline">${esc(g.tagline)}</div>` : ''}
+            ${tempRange ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">🌡️ ${esc(tempRange)}</div>` : ''}
+            <div class="gear-card-meta">
+                ${_gearPdfBadge(g)}
+                ${tagPills ? `<div style="display:flex;flex-wrap:wrap;gap:3px;">${tagPills}</div>` : ''}
+                ${g.storage ? `<span class="gear-storage">📍 ${esc(g.storage)}</span>` : ''}
+            </div>
         </div>
         <div class="gear-card-actions">
-            <button class="gear-edit-btn" onclick="event.stopPropagation();showEditGear('${g.id}')" title="編集">✏️</button>
-            <span class="gear-arrow">›</span>
+            <button class="gear-edit-btn"   title="編集" onclick="event.stopPropagation();showEditGear('${g.id}')">✏️</button>
+            <button class="gear-delete-btn" title="削除" onclick="event.stopPropagation();confirmDeleteGear('${g.id}')">🗑️</button>
         </div>
     </div>`;
 }
@@ -1820,6 +1916,23 @@ function buildGearForm(g) {
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:6px;">${emojiPresets}</div>
             </div>
+            <div class="form-field">
+                <label class="form-label">📸 ギア写真</label>
+                <input type="hidden" id="f-gear-image-data" value="${esc(g&&g.gearImage?g.gearImage:'')}">
+                <div id="f-image-preview-wrap" style="margin-bottom:10px;">
+                    ${g&&g.gearImage
+                        ? `<img src="${g.gearImage}" style="width:100%;max-height:180px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">`
+                        : `<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">写真なし（絵文字で表示）</div>`}
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <label class="gear-img-upload-label" for="f-gear-image">📷 写真を選ぶ</label>
+                    <input type="file" id="f-gear-image" accept="image/*" style="display:none;" onchange="handleGearImageUpload(this)">
+                    <button type="button" class="gear-img-remove-btn" id="f-image-remove-btn"
+                        style="display:${g&&g.gearImage?'block':'none'};"
+                        onclick="removeGearImage()">✕ 削除</button>
+                </div>
+                <div class="form-hint">JPEGまたはPNG・スマホのカメラロールからも選べます</div>
+            </div>
         </div>
 
         <!-- テント専用 -->
@@ -1934,6 +2047,42 @@ function onCategoryChange() {
     document.getElementById('f-sleeping-bag-section').style.display  = isSleepingBag ? 'block' : 'none';
 }
 
+function handleGearImageUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const MAX = 480;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+                if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+                else        { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+            document.getElementById('f-gear-image-data').value = dataUrl;
+            document.getElementById('f-image-preview-wrap').innerHTML =
+                `<img src="${dataUrl}" style="width:100%;max-height:180px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">`;
+            document.getElementById('f-image-remove-btn').style.display = 'block';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeGearImage() {
+    document.getElementById('f-gear-image-data').value = '';
+    document.getElementById('f-image-preview-wrap').innerHTML =
+        '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">写真なし（絵文字で表示）</div>';
+    document.getElementById('f-image-remove-btn').style.display = 'none';
+    const fi = document.getElementById('f-gear-image');
+    if (fi) fi.value = '';
+}
+
 function setEmoji(e) {
     document.getElementById('f-emoji').value = e;
 }
@@ -1984,6 +2133,7 @@ function submitGearForm() {
         maker:          (document.getElementById('f-maker').value||'').trim(),
         category,
         emoji:          (document.getElementById('f-emoji').value||'📦').trim(),
+        gearImage:      document.getElementById('f-gear-image-data').value || '',
         tagline:        (document.getElementById('f-tagline').value||'').trim(),
         storage:        (document.getElementById('f-storage').value||'').trim(),
         setup:          textareaToSteps(document.getElementById('f-setup').value),
