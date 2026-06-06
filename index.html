@@ -55,7 +55,7 @@
         .nav-label { font-size:10px; font-weight:600; white-space:nowrap; }
 
         /* ===== SCREENS ===== */
-        .screen { display:none; padding:14px 14px 90px; }
+        .screen { display:none; padding:10px 12px 90px; }
         .screen.active { display:block; animation:fadeIn 0.2s ease; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
@@ -99,40 +99,40 @@
         /* ===== GEAR LIST ===== */
         .add-gear-btn {
             width:100%; background:var(--bg-header); color:white; border:none;
-            border-radius:16px; padding:15px; font-size:16px; font-weight:800;
+            border-radius:12px; padding:10px 14px; font-size:14px; font-weight:800;
             cursor:pointer; font-family:inherit; display:flex; align-items:center;
-            justify-content:center; gap:8px; margin-bottom:14px; transition:opacity 0.15s;
+            justify-content:center; gap:6px; margin-bottom:8px; transition:opacity 0.15s;
         }
         .add-gear-btn:active { opacity:0.85; }
 
         .search-bar {
             background:var(--bg-card); border:2px solid var(--border);
-            border-radius:14px; padding:12px 16px; width:100%;
-            font-size:15px; color:var(--text-primary); margin-bottom:12px;
+            border-radius:12px; padding:8px 14px; width:100%;
+            font-size:14px; color:var(--text-primary); margin-bottom:8px;
             outline:none; font-family:inherit;
         }
         .search-bar:focus { border-color:var(--accent-brown); }
 
         .gear-filter {
-            display:flex; gap:8px; margin-bottom:14px;
+            display:flex; gap:6px; margin-bottom:0;
             overflow-x:auto; padding-bottom:4px; scrollbar-width:none;
         }
         .gear-filter::-webkit-scrollbar { display:none; }
         /* ===== CATEGORY CHIPS ===== */
         .cat-chip {
-            display:flex; flex-direction:column; align-items:center; gap:2px;
-            border:2px solid; border-radius:14px; padding:8px 11px;
+            display:flex; flex-direction:column; align-items:center; gap:1px;
+            border:2px solid; border-radius:12px; padding:5px 9px;
             font-family:inherit; cursor:pointer; white-space:nowrap;
-            transition:all 0.15s; flex-shrink:0; min-width:54px;
+            transition:all 0.15s; flex-shrink:0; min-width:48px;
         }
-        .cat-chip-icon  { font-size:20px; line-height:1.2; }
+        .cat-chip-icon  { font-size:17px; line-height:1.2; }
         .cat-chip-name  { font-size:10px; font-weight:700; }
         .cat-chip-count { font-size:10px; font-weight:600; opacity:0.7; }
 
         /* ===== GEAR CARD (redesigned) ===== */
         .gear-card {
-            background:var(--bg-card); border-radius:16px; padding:12px 14px;
-            margin-bottom:10px; box-shadow:0 2px 8px var(--shadow);
+            background:var(--bg-card); border-radius:14px; padding:10px 12px;
+            margin-bottom:8px; box-shadow:0 2px 8px var(--shadow);
             border:1px solid var(--border); border-left-width:4px;
             display:flex; align-items:flex-start; gap:12px;
             cursor:pointer; transition:transform 0.1s;
@@ -190,14 +190,21 @@
             cursor:pointer; font-family:inherit; transition:all 0.15s;
         }
         /* ===== CATEGORY MANAGER ===== */
+        .filter-row {
+            display:flex; align-items:center; gap:6px; margin-bottom:8px;
+        }
+        .filter-row .gear-filter {
+            flex:1; margin-bottom:0; padding-bottom:4px;
+        }
         .cat-mgr-toggle {
-            background:none; border:none; font-size:12px; font-weight:700;
-            color:var(--text-muted); cursor:pointer; font-family:inherit;
-            padding:3px 6px; display:block; margin-left:auto;
+            background:none; border:1px solid var(--border); border-radius:8px;
+            font-size:11px; font-weight:700; color:var(--text-muted);
+            cursor:pointer; font-family:inherit; padding:4px 7px;
+            white-space:nowrap; flex-shrink:0; line-height:1.2;
         }
         .cat-mgr-panel {
             background:var(--bg-card); border:1px solid var(--border);
-            border-radius:14px; padding:14px; margin-bottom:14px;
+            border-radius:14px; padding:14px; margin-bottom:10px;
         }
         .cat-mgr-item {
             display:flex; align-items:center; gap:8px; padding:8px 4px;
@@ -215,13 +222,13 @@
 
         /* ===== TENT CARD ===== */
         .tent-card {
-            background:var(--bg-card); border-radius:18px; overflow:hidden;
-            margin-bottom:12px; box-shadow:0 3px 12px var(--shadow); border:1px solid var(--border);
+            background:var(--bg-card); border-radius:16px; overflow:hidden;
+            margin-bottom:8px; box-shadow:0 3px 12px var(--shadow); border:1px solid var(--border);
             cursor:pointer; transition:transform 0.1s;
         }
         .tent-card:active { transform:scale(0.97); }
         .tent-photo {
-            height:118px; display:flex; align-items:center; justify-content:center;
+            height:100px; display:flex; align-items:center; justify-content:center;
             font-size:62px; line-height:1; position:relative;
         }
         .tent-photo-label {
@@ -248,10 +255,10 @@
             width:90px; height:90px; border-radius:12px;
             object-fit:cover; flex-shrink:0;
         }
-        .tent-card-body { padding:14px; }
-        .tent-card-maker   { font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
-        .tent-card-name    { font-size:17px; font-weight:800; color:var(--text-primary); margin-bottom:5px; }
-        .tent-card-tagline { font-size:13px; color:var(--text-secondary); margin-bottom:11px; line-height:1.5; }
+        .tent-card-body { padding:10px 12px; }
+        .tent-card-maker   { font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px; }
+        .tent-card-name    { font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:4px; }
+        .tent-card-tagline { font-size:12px; color:var(--text-secondary); margin-bottom:8px; line-height:1.4; }
         .tent-card-footer  { display:flex; justify-content:space-between; align-items:center; }
         .tent-card-storage { font-size:12px; color:var(--text-muted); }
         .tent-tags-row     { display:flex; flex-wrap:wrap; gap:5px; }
@@ -748,12 +755,11 @@
 
 <!-- ==============================  GEAR LIST  ============================== -->
 <div class="screen" id="screen-gear-list">
-    <button class="add-gear-btn" onclick="showAddGear()">
-        <span style="font-size:22px;">＋</span> ギアを追加する
-    </button>
-    <input class="search-bar" type="text" placeholder="🔍 ギア名・メーカー・カテゴリ・収納場所で検索…" id="gear-search" oninput="renderGearList()">
-    <div class="gear-filter" id="filter-bar"></div>
-    <button class="cat-mgr-toggle" onclick="toggleCatManager()">⚙️ カテゴリを編集</button>
+    <input class="search-bar" type="text" placeholder="🔍 ギア名・メーカー・カテゴリで検索…" id="gear-search" oninput="renderGearList()">
+    <div class="filter-row">
+        <div class="gear-filter" id="filter-bar"></div>
+        <button class="cat-mgr-toggle" onclick="toggleCatManager()">⚙️</button>
+    </div>
     <div id="cat-mgr-panel" style="display:none;"></div>
 
     <!-- テント比較セクション -->
@@ -793,6 +799,9 @@
     </div>
 
     <div id="gear-list-items"></div>
+    <button class="add-gear-btn" onclick="showAddGear()" style="margin-top:10px;">
+        <span style="font-size:18px;">＋</span> ギアを追加する
+    </button>
 
 </div>
 
