@@ -353,6 +353,41 @@
         .pdf-count-num   { font-size:26px; font-weight:800; line-height:1; }
         .pdf-count-label { font-size:11px; color:var(--text-muted); margin-top:5px; }
 
+        /* ===== PDF MANAGEMENT (CRUD) ===== */
+        .pdf-mgmt-add-btn {
+            width:100%; background:var(--bg-card); border:2px dashed var(--border);
+            border-radius:14px; padding:14px; font-size:15px; font-weight:700;
+            color:var(--text-secondary); cursor:pointer; font-family:inherit;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            margin-bottom:12px; transition:all 0.15s;
+        }
+        .pdf-mgmt-add-btn:active { background:var(--bg); border-color:var(--accent-brown); color:var(--accent-brown); }
+        .pdf-mgmt-card {
+            background:var(--bg-card); border-radius:16px; padding:14px 16px; margin-bottom:10px;
+            box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+            display:flex; align-items:flex-start; gap:12px;
+        }
+        .pdf-mgmt-info { flex:1; min-width:0; }
+        .pdf-mgmt-actions { display:flex; flex-direction:column; gap:6px; flex-shrink:0; align-items:flex-end; }
+        .pdf-mgmt-btns { display:flex; gap:5px; margin-top:8px; }
+        .pmgmt-btn {
+            background:var(--bg); border:1.5px solid var(--border);
+            border-radius:8px; padding:5px 9px; font-size:12px; font-weight:700;
+            cursor:pointer; font-family:inherit; color:var(--text-secondary);
+            transition:background 0.1s; white-space:nowrap;
+        }
+        .pmgmt-btn:active { background:var(--border); }
+        .pmgmt-edit { color:var(--accent-brown); border-color:rgba(122,92,56,0.35); }
+        .pmgmt-del  { color:var(--danger); border-color:rgba(204,42,42,0.22); }
+        .pmgmt-del:active { background:rgba(204,42,42,0.08) !important; }
+        .pdf-inline-form {
+            background:var(--bg-card); border-radius:16px; padding:16px; margin-bottom:10px;
+            box-shadow:0 2px 8px var(--shadow); border:2px solid var(--accent-brown);
+        }
+        .pdf-inline-form .vif-field { margin-bottom:12px; }
+        .pdf-inline-form .vif-field:last-of-type { margin-bottom:0; }
+        .pdf-inline-form .vif-label { display:block; font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:5px; }
+
         /* ===== CHECKLIST ===== */
         .check-progress { background:var(--bg-card); border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border); }
         .progress-num   { font-size:32px; font-weight:800; color:var(--accent-khaki); line-height:1; }
@@ -699,6 +734,10 @@
 
 <!-- ==============================  PDF LIST  ============================== -->
 <div class="screen" id="screen-pdf-list">
+    <button class="pdf-mgmt-add-btn" id="pdf-mgmt-add-btn" onclick="showPDFAddForm()">
+        <span style="font-size:18px;">＋</span> 取説追加
+    </button>
+    <div id="pdf-add-form-wrap"></div>
     <div id="pdf-count-summary"></div>
     <div class="gear-filter" id="pdf-filter-bar"></div>
     <div id="pdf-list-items"></div>
@@ -750,7 +789,8 @@
 // ============================================================
 // CONSTANTS
 // ============================================================
-const STORAGE_KEY = 'camp_gears_app_v1';
+const STORAGE_KEY     = 'camp_gears_app_v1';
+const PDF_STORAGE_KEY = 'camp_manuals_v1';
 
 const TENT_TAG_DEF = {
     solo:     { label:'👤 ソロ向き',      color:'#C4723A', bg:'#FFF0E6' },
@@ -919,9 +959,22 @@ const DEFAULT_GEARS = [
 ];
 
 // ============================================================
+// DEFAULT MANUALS (取説初期データ)
+// ============================================================
+const DEFAULT_MANUALS = [
+    { id:'m0', gearName:'サーカスST',         maker:'テンマクデザイン',  category:'テント',    pdfPath:'public/manuals/circus_st.pdf',      memo:'テンマクデザイン サーカスS 取扱説明書', addedAt:1717200000000 },
+    { id:'m1', gearName:'ヴォールト',          maker:'Snow Peak',        category:'テント',    pdfPath:'public/manuals/snowpeak_vault.pdf',  memo:'Snow Peak ヴォールト 取扱説明書',       addedAt:1717200000000 },
+    { id:'m2', gearName:'パップテント（軍幕TC）', maker:'TOMOUNT',        category:'テント',    pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
+    { id:'m3', gearName:'ワンタッチドームテント', maker:'雑貨の国のアリス', category:'テント',   pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
+    { id:'m4', gearName:'ロッジ型広空間テント', maker:'DesertFox',        category:'テント',    pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
+    { id:'m5', gearName:'焚き火台M',           maker:'Snow Peak',        category:'焚き火台',  pdfPath:'',                                   memo:'',                                      addedAt:1717200000000 },
+];
+
+// ============================================================
 // STATE
 // ============================================================
 let gears         = [];
+let manuals       = [];
 let filterCat     = 'all';
 let pdfFilterCat  = 'all';
 const compTags    = new Set();
@@ -942,6 +995,18 @@ function loadGears() {
 
 function saveGears() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gears));
+}
+
+function loadManuals() {
+    try {
+        const raw = localStorage.getItem(PDF_STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return JSON.parse(JSON.stringify(DEFAULT_MANUALS));
+}
+
+function saveManuals() {
+    localStorage.setItem(PDF_STORAGE_KEY, JSON.stringify(manuals));
 }
 
 function generateId() {
@@ -1279,7 +1344,7 @@ function buildHome() {
 
 function updateHomeStats() {
     const n        = gears.length;
-    const pdfCount = gears.filter(g => !!getPDFPath(g)).length;
+    const pdfCount = manuals.filter(m => !!m.pdfPath).length;
     document.getElementById('home-gear-count').textContent = n;
     document.getElementById('home-pdf-count').textContent  = pdfCount;
     document.getElementById('qm-gear-sub').textContent     = n + '点登録中';
@@ -1826,7 +1891,7 @@ function pdfRowHTML(g) {
 }
 
 // ============================================================
-// PDF LIST
+// PDF LIST — CRUD 管理
 // ============================================================
 function setPDFFilter(btn, cat) {
     pdfFilterCat = cat;
@@ -1836,8 +1901,7 @@ function setPDFFilter(btn, cat) {
 }
 
 function buildPDFList() {
-    // フィルターバーを動的に構築（ギアのカテゴリから生成）
-    const cats = [...new Set(gears.map(g => g.category).filter(Boolean))].sort();
+    const cats = [...new Set(manuals.map(m => m.category).filter(Boolean))].sort();
     document.getElementById('pdf-filter-bar').innerHTML =
         `<button class="filter-btn${pdfFilterCat==='all'?' active':''}" onclick="setPDFFilter(this,'all')">すべて</button>` +
         cats.map(c =>
@@ -1847,44 +1911,144 @@ function buildPDFList() {
 }
 
 function renderPDFList() {
-    const filtered = pdfFilterCat === 'all' ? gears : gears.filter(g => g.category === pdfFilterCat);
-    const registeredCount   = filtered.filter(g => !!getPDFPath(g)).length;
-    const unregisteredCount = filtered.length - registeredCount;
+    // 追加フォームを隠してボタンを戻す
+    const addBtn  = document.getElementById('pdf-mgmt-add-btn');
+    const addWrap = document.getElementById('pdf-add-form-wrap');
+    if (addBtn)  addBtn.style.display  = '';
+    if (addWrap) addWrap.innerHTML = '';
 
-    // 件数サマリー
+    const filtered = pdfFilterCat === 'all' ? manuals : manuals.filter(m => m.category === pdfFilterCat);
+    const regCount   = filtered.filter(m => !!m.pdfPath).length;
+    const unregCount = filtered.length - regCount;
+
     document.getElementById('pdf-count-summary').innerHTML = `
         <div class="pdf-count-row">
             <div class="pdf-count-block">
-                <div class="pdf-count-num" style="color:var(--green-text);">${registeredCount}</div>
+                <div class="pdf-count-num" style="color:var(--green-text);">${regCount}</div>
                 <div class="pdf-count-label">📗 登録済み</div>
             </div>
             <div class="pdf-count-block">
-                <div class="pdf-count-num" style="color:var(--text-muted);">${unregisteredCount}</div>
+                <div class="pdf-count-num" style="color:var(--text-muted);">${unregCount}</div>
                 <div class="pdf-count-label">📋 未登録</div>
             </div>
         </div>`;
 
-    // PDFカード一覧
-    document.getElementById('pdf-list-items').innerHTML = filtered.map(g => {
-        const pdfPath = getPDFPath(g);
-        const hasPdf  = !!pdfPath;
-        const badge   = hasPdf
-            ? `<span class="pdf-status-badge registered">✓ PDF登録済み</span>`
-            : `<span class="pdf-status-badge unregistered">取扱説明書未登録</span>`;
-        const btn = hasPdf
-            ? `<button class="pdf-btn" onclick="event.stopPropagation();openPDF('${pdfPath}')">開く</button>`
-            : `<button class="pdf-btn" style="opacity:0.35;cursor:default;" disabled>未登録</button>`;
-        return `
-        <div class="pdf-card" onclick="${hasPdf ? `openPDF('${pdfPath}')` : ''}" style="${hasPdf ? 'cursor:pointer;' : ''}">
-            <div class="pdf-icon">${hasPdf ? '📗' : '📋'}</div>
-            <div class="pdf-info">
-                <div class="pdf-name">${esc(g.name)}</div>
-                <div class="pdf-maker">${esc(g.maker)}　・　${esc(g.category)}</div>
-                ${badge}
+    if (!filtered.length) {
+        document.getElementById('pdf-list-items').innerHTML =
+            '<div class="card" style="text-align:center;color:var(--text-muted);padding:40px 16px;">登録されている取説がありません</div>';
+        return;
+    }
+    document.getElementById('pdf-list-items').innerHTML =
+        filtered.map(m => _pdfCardHTML(m, manuals.indexOf(m))).join('');
+}
+
+function _pdfCardHTML(m, idx) {
+    const hasPdf   = !!m.pdfPath;
+    const filename = hasPdf ? m.pdfPath.split('/').pop() : null;
+    const dateStr  = m.addedAt ? new Date(m.addedAt).toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' }) : '';
+    const badge    = hasPdf
+        ? `<span class="pdf-status-badge registered">✓ PDF登録済み</span>`
+        : `<span class="pdf-status-badge unregistered">未登録</span>`;
+    const openBtn  = hasPdf
+        ? `<button class="pdf-btn" onclick="openPDF('${esc(m.pdfPath)}')">開く</button>`
+        : `<button class="pdf-btn" style="opacity:0.35;cursor:default;" disabled>未登録</button>`;
+    return `<div class="pdf-mgmt-card" id="pcard-${idx}">
+        <div class="pdf-icon" style="font-size:28px;min-width:34px;text-align:center;">${hasPdf ? '📗' : '📋'}</div>
+        <div class="pdf-mgmt-info">
+            <div class="pdf-name">${esc(m.gearName)}</div>
+            <div class="pdf-maker">${esc(m.maker)}${m.category ? '　・　' + esc(m.category) : ''}</div>
+            ${badge}
+            ${hasPdf ? `<div class="pdf-filename">📎 ${esc(filename)}</div>` : ''}
+            ${!hasPdf ? `<div class="pdf-filename" style="color:var(--text-muted);font-style:italic;">取扱説明書が登録されていません</div>` : ''}
+            ${m.memo ? `<div class="pdf-filename">💬 ${esc(m.memo)}</div>` : ''}
+            ${dateStr ? `<div class="pdf-filename">🗓 ${dateStr}</div>` : ''}
+            <div class="pdf-mgmt-btns">
+                <button class="pmgmt-btn pmgmt-edit" onclick="editPDFInline(${idx})">編集</button>
+                <button class="pmgmt-btn pmgmt-del"  onclick="deletePDFEntry(${idx})">削除</button>
             </div>
-            ${btn}
-        </div>`;
-    }).join('') || '<div class="card" style="text-align:center;color:var(--text-muted);padding:40px 16px;">該当するギアがありません</div>';
+        </div>
+        <div style="flex-shrink:0;">${openBtn}</div>
+    </div>`;
+}
+
+function _pdfFormHTML(idx, m) {
+    const isNew = idx === -1;
+    return `<div class="pdf-inline-form">
+        <div class="vif-field">
+            <label class="vif-label">ギア名 <span style="color:var(--danger);">*</span></label>
+            <input class="form-input" type="text" id="pf-gear" value="${esc(m ? m.gearName : '')}" placeholder="例：ヴォールト">
+        </div>
+        <div class="vif-field">
+            <label class="vif-label">メーカー名</label>
+            <input class="form-input" type="text" id="pf-maker" value="${esc(m ? m.maker : '')}" placeholder="例：Snow Peak">
+        </div>
+        <div class="vif-field">
+            <label class="vif-label">カテゴリ</label>
+            <input class="form-input" type="text" id="pf-category" value="${esc(m ? m.category : '')}" placeholder="例：テント">
+        </div>
+        <div class="vif-field">
+            <label class="vif-label">PDFパス</label>
+            <input class="form-input" type="text" id="pf-path" value="${esc(m ? m.pdfPath : '')}" placeholder="public/manuals/filename.pdf">
+            <div class="form-hint">public/manuals/ 以下に配置したファイルのパスを入力</div>
+        </div>
+        <div class="vif-field">
+            <label class="vif-label">メモ</label>
+            <textarea class="form-input" id="pf-memo" rows="2" placeholder="メモを入力…">${esc(m ? m.memo : '')}</textarea>
+        </div>
+        <div class="video-form-btns">
+            <button class="btn-vm-save" onclick="savePDFEntry(${idx})">${isNew ? '＋ 追加する' : '💾 保存する'}</button>
+            <button class="btn-vm-cancel" onclick="renderPDFList()">キャンセル</button>
+        </div>
+    </div>`;
+}
+
+function showPDFAddForm() {
+    const addBtn  = document.getElementById('pdf-mgmt-add-btn');
+    const addWrap = document.getElementById('pdf-add-form-wrap');
+    if (addBtn)  addBtn.style.display = 'none';
+    if (addWrap) {
+        addWrap.innerHTML = _pdfFormHTML(-1, null);
+        addWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function editPDFInline(idx) {
+    const card = document.getElementById('pcard-' + idx);
+    const m    = manuals[idx];
+    if (!card || !m) return;
+    card.innerHTML = _pdfFormHTML(idx, m);
+    card.style.border = '2px solid var(--accent-brown)';
+    card.style.background = 'var(--bg-card)';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function savePDFEntry(idx) {
+    const gearName = (document.getElementById('pf-gear')?.value     || '').trim();
+    if (!gearName) { showToast('ギア名を入力してください'); return; }
+    const maker    = (document.getElementById('pf-maker')?.value    || '').trim();
+    const category = (document.getElementById('pf-category')?.value || '').trim();
+    const pdfPath  = (document.getElementById('pf-path')?.value     || '').trim();
+    const memo     = (document.getElementById('pf-memo')?.value     || '').trim();
+
+    if (idx === -1) {
+        manuals.push({ id: generateId(), gearName, maker, category, pdfPath, memo, addedAt: Date.now() });
+    } else {
+        manuals[idx] = { ...manuals[idx], gearName, maker, category, pdfPath, memo };
+    }
+    saveManuals();
+    buildPDFList();
+    updateHomeStats();
+    showToast(idx === -1 ? '取説を追加しました ✓' : '保存しました ✓');
+}
+
+function deletePDFEntry(idx) {
+    const m = manuals[idx]; if (!m) return;
+    if (!confirm(`「${m.gearName}」の取説を削除しますか？\n\nこの操作は元に戻せません。`)) return;
+    manuals.splice(idx, 1);
+    saveManuals();
+    buildPDFList();
+    updateHomeStats();
+    showToast('削除しました');
 }
 
 // ============================================================
@@ -2019,8 +2183,10 @@ function showToast(msg) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', ()=>{
-    gears = loadGears();
-    saveGears(); // ensure persisted
+    gears   = loadGears();
+    saveGears();
+    manuals = loadManuals();
+    saveManuals();
     rebuildFilterBar();
     renderGearList();
     buildHome();
