@@ -714,6 +714,25 @@
         </div>
     </div>
 
+    <!-- 寝袋比較セクション -->
+    <div id="sb-comparison-section" style="display:none;">
+        <div class="comparison-card">
+            <div class="comparison-title">🛌 どの寝袋を持っていく？</div>
+            <div class="comparison-subtitle">今日のキャンプスタイルで選ぼう</div>
+            <div class="comp-tags-row">
+                <button class="comp-tag" data-tag="summer"    onclick="toggleCompTag(this)">☀️ 夏向き</button>
+                <button class="comp-tag" data-tag="winter"    onclick="toggleCompTag(this)">❄️ 冬向き</button>
+                <button class="comp-tag" data-tag="allseason" onclick="toggleCompTag(this)">🌿 オールシーズン</button>
+                <button class="comp-tag" data-tag="sb_solo"   onclick="toggleCompTag(this)">👤 ソロ向き</button>
+                <button class="comp-tag" data-tag="sb_duo"    onclick="toggleCompTag(this)">👥 デュオ向き</button>
+                <button class="comp-tag" data-tag="sb_family" onclick="toggleCompTag(this)">👨‍👩‍👧 ファミリー向き</button>
+                <button class="comp-tag" data-tag="compact"   onclick="toggleCompTag(this)">🎒 コンパクト</button>
+                <button class="comp-tag" data-tag="warmth"    onclick="toggleCompTag(this)">🔥 防寒重視</button>
+            </div>
+            <div class="comp-match-count" id="sb-comp-match-count"></div>
+        </div>
+    </div>
+
     <div id="gear-list-items"></div>
 
 </div>
@@ -814,6 +833,17 @@ const TENT_TAG_DEF = {
     easy:     { label:'⚡ 設営が楽',      color:'#5A8B5A', bg:'#E4F4E4' },
     campfire: { label:'🔥 焚き火向き',    color:'#B85A28', bg:'#FFF0E6' },
     cozy:     { label:'🏠 おこもり',      color:'#7A5A9B', bg:'#F0EAF8' },
+};
+
+const SLEEPING_BAG_TAG_DEF = {
+    summer:    { label:'☀️ 夏向き',           color:'#C47C3A', bg:'#FFF4E6' },
+    winter:    { label:'❄️ 冬向き',           color:'#3A6B8B', bg:'#E6F0FA' },
+    allseason: { label:'🌿 オールシーズン',    color:'#5A8B5A', bg:'#E4F4E4' },
+    sb_solo:   { label:'👤 ソロ向き',         color:'#C4723A', bg:'#FFF0E6' },
+    sb_duo:    { label:'👥 デュオ向き',       color:'#3A8B8B', bg:'#E2F5F5' },
+    sb_family: { label:'👨‍👩‍👧 ファミリー向き',color:'#4A6B9B', bg:'#E4EEF8' },
+    compact:   { label:'🎒 コンパクト',       color:'#7A5A9B', bg:'#F0EAF8' },
+    warmth:    { label:'🔥 防寒重視',         color:'#B85A28', bg:'#FFF0E6' },
 };
 
 const CAT_ICONS = {
@@ -956,13 +986,60 @@ const DEFAULT_GEARS = [
       caution:'耐荷重は1枚あたり30kg。重いものを乗せる際は必ず平坦な場所で使用。',
       specs:{使用時サイズ:'600×350×H250mm',重量:'1.2kg',耐荷重:'30kg',素材:'ステンレス'} },
 
-    { id:'g9', name:'ダウンハガー800 #3', maker:'mont-bell', category:'寝袋・マット', emoji:'🛌', storage:'床置きエリア（専用ボックス）',
-      storageMethod:'自宅では収納袋から出してルーズバッグで保管。床置きエリアの専用ボックスへ。',
-      pdf:'montbell_DownHugger800_3_manual.pdf', video:'YouTube: "モンベル ダウンハガー 収納方法" で検索',
-      setup:['収納袋からシュラフを取り出す（押しつぶさず引き出す）','ジッパーを全開にして広げる','マット上に置いて使用','寒い場合は付属ドローコードで顔周りを絞る'],
-      takedown:['ジッパーを全開にして内側を乾燥させる','汚れがあれば40度以下のぬるま湯で手洗い','足元から丸めて収納袋に押し込む','長期保存時は収納袋から出してルーズバッグで保管する'],
-      caution:'収納袋への長期保管は羽毛を傷めるため、自宅では収納袋から出して保管すること。洗濯は必ずダウン専用洗剤を使用。',
-      specs:{快適睡眠温度:'7℃',使用下限温度:'2℃',重量:'650g',素材:'800フィルパワーダウン'} },
+    { id:'s0', name:'soomloom マミー型 ダウン', maker:'soomloom', category:'寝袋・マット', emoji:'🛌',
+      tagline:'コンパクトで暖かいダウンシュラフ',
+      storage:'寝袋エリア', storageMethod:'収納袋に圧縮して保管。長期保管は取り出してルーズバッグへ。',
+      sleepingBagTags:['sb_solo','compact','allseason'],
+      specs:{タイプ:'マミー型ダウンシュラフ', 快適温度:'-15〜0℃', おすすめ用途:'ソロキャンプ、春秋キャンプ'},
+      features:'ダウン素材で軽量コンパクト。冬以外の多くのシーズンで使用可能。',
+      setup:['収納袋からシュラフを取り出す','ジッパーを全開にして広げる','マット上に敷いて使用','頭部ドローコードで保温を調整する'],
+      takedown:['ジッパーを全開にして内部を乾燥させる','足元から丸めて収納袋に圧縮する','湿っている場合はしっかり乾燥させてから収納'],
+      caution:'長期保管時は収納袋から出して保管すること。濡れた場合は必ず完全乾燥させてから収納。',
+      videos:[] },
+
+    { id:'s1', name:'JP寝袋 封筒型 2人用', maker:'JP', category:'寝袋・マット', emoji:'🛌',
+      tagline:'2人で使える大型シュラフ',
+      storage:'寝袋エリア', storageMethod:'コンプレッションバッグで圧縮して収納。',
+      sleepingBagTags:['sb_duo','sb_family','allseason'],
+      specs:{タイプ:'封筒型シュラフ', 快適温度:'-5〜+25℃', おすすめ用途:'デュオキャンプ、ファミリーキャンプ'},
+      features:'2人用でゆったり使える。ファミリー向きのオールシーズン対応シュラフ。',
+      setup:['収納袋から取り出す','ジッパーを全開にして広げる','2人分のマットの上に敷く'],
+      takedown:['ジッパーを全開にして乾燥させる','たたんで収納袋に収める'],
+      caution:'使用後は必ず陰干しして湿気を飛ばすこと。',
+      videos:[] },
+
+    { id:'s2', name:'ICECO マミー型 冬用', maker:'ICECO', category:'寝袋・マット', emoji:'🛌',
+      tagline:'真冬対応の防寒シュラフ',
+      storage:'寝袋エリア', storageMethod:'圧縮収納袋で保管。長期保管は収納袋から出して保管推奨。',
+      sleepingBagTags:['winter','warmth'],
+      specs:{タイプ:'冬用マミー型シュラフ', 快適温度:'-25℃耐寒', おすすめ用途:'冬キャンプ'},
+      features:'冬キャンプ用の防寒シュラフ。保温力重視の寒冷地向け設計。',
+      setup:['収納袋から取り出す','ジッパーを全開にして広げる','マット上に置いて使用','フードと顔周りのドローコードをしっかり絞る'],
+      takedown:['ジッパーを全開にして乾燥させる（結露に注意）','完全乾燥後に足元から丸めて圧縮収納'],
+      caution:'使用後は必ずしっかり乾燥させること。結露が多いため撤収後の乾燥が重要。',
+      videos:[] },
+
+    { id:'s3', name:'オールシーズン寝袋 封筒型', maker:'', category:'寝袋・マット', emoji:'🛌',
+      tagline:'幅広い季節に使える万能寝袋',
+      storage:'寝袋エリア', storageMethod:'封筒型のため折りたたんで収納袋に。',
+      sleepingBagTags:['allseason','sb_family'],
+      specs:{タイプ:'封筒型シュラフ', 快適温度:'-15〜20℃', おすすめ用途:'オールシーズン'},
+      features:'春夏秋冬対応のオールシーズンシュラフ。ゆったりした寝心地で初心者向き。',
+      setup:['収納袋から取り出す','ジッパーを開いて広げる','マット上に敷いて使用'],
+      takedown:['ジッパーを全開にして内部を乾燥させる','折りたたんで収納袋へ'],
+      caution:'暑い時期は全開にして毛布代わりに使用可能。',
+      videos:[] },
+
+    { id:'s4', name:'MILFORT 夏用封筒型（MF607SB）', maker:'MILFORT', category:'寝袋・マット', emoji:'🛌',
+      tagline:'夏キャンプ向け軽量シュラフ',
+      storage:'寝袋エリア', storageMethod:'コンパクトに折りたたんで収納袋へ。',
+      sleepingBagTags:['summer'],
+      specs:{タイプ:'夏用封筒型シュラフ', 型番:'MF607SB', おすすめ用途:'夏キャンプ'},
+      features:'夏用の通気性重視の軽量シュラフ。夏キャンプに最適。',
+      setup:['収納袋から取り出す','ジッパーを開いて広げる','暑い場合はジッパーを全開にして使用'],
+      takedown:['乾燥させてから収納袋に折りたたんで収める'],
+      caution:'涼しい場所では保温力が不足する場合があるため、気温に応じて毛布と併用。',
+      videos:[] },
 
     { id:'g10', name:'ローディーカット 60', maker:'YETI', category:'クーラー', emoji:'🧊', storage:'右奥（床置き）',
       storageMethod:'右奥に平置き保管。使用前に必ず内部を確認。',
@@ -1016,6 +1093,16 @@ function loadGears() {
 
 function saveGears() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gears));
+}
+
+function migrateGears() {
+    // モンベル ダウンハガー800 #3 (g9) を削除
+    gears = gears.filter(g => !(g.id === 'g9' && g.maker === 'mont-bell'));
+    // 新しい寝袋5組を未登録の場合のみ追加
+    const newIds = ['s0','s1','s2','s3','s4'];
+    for (const bag of DEFAULT_GEARS.filter(g => newIds.includes(g.id))) {
+        if (!gears.some(g => g.id === bag.id)) gears.push(bag);
+    }
 }
 
 function loadManuals() {
@@ -1417,11 +1504,10 @@ function setFilter(btn, cat) {
     document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     filterCat = cat;
-    if (cat !== 'テント') {
-        compTags.clear();
-        document.querySelectorAll('.comp-tag').forEach(b=>b.classList.remove('active'));
-    }
-    document.getElementById('comparison-section').style.display = cat==='テント' ? 'block' : 'none';
+    compTags.clear();
+    document.querySelectorAll('.comp-tag').forEach(b=>b.classList.remove('active'));
+    document.getElementById('comparison-section').style.display    = cat==='テント'      ? 'block' : 'none';
+    document.getElementById('sb-comparison-section').style.display = cat==='寝袋・マット' ? 'block' : 'none';
     renderGearList();
 }
 
@@ -1442,16 +1528,24 @@ function renderGearList() {
     if (filterCat==='テント' && compTags.size>0) {
         filtered = filtered.filter(g=>g.tentTags && g.tentTags.some(t=>compTags.has(t)));
     }
-    const countEl = document.getElementById('comp-match-count');
-    if (filterCat==='テント' && compTags.size>0) countEl.textContent = filtered.length+'件のテントがマッチしました';
-    else countEl.textContent = '';
+    if (filterCat==='寝袋・マット' && compTags.size>0) {
+        filtered = filtered.filter(g=>g.sleepingBagTags && g.sleepingBagTags.some(t=>compTags.has(t)));
+    }
+    const countEl   = document.getElementById('comp-match-count');
+    const sbCountEl = document.getElementById('sb-comp-match-count');
+    countEl.textContent   = (filterCat==='テント'      && compTags.size>0) ? filtered.length+'件のテントがマッチしました' : '';
+    sbCountEl.textContent = (filterCat==='寝袋・マット' && compTags.size>0) ? filtered.length+'件の寝袋がマッチしました' : '';
 
     const container = document.getElementById('gear-list-items');
     if (!filtered.length) {
         container.innerHTML = '<div class="card" style="text-align:center;color:var(--text-muted);padding:40px 16px;">該当するギアがありません</div>';
         return;
     }
-    container.innerHTML = filtered.map(g => g.category==='テント' ? tentCardHTML(g) : gearCardHTML(g)).join('');
+    container.innerHTML = filtered.map(g => {
+        if (g.category === 'テント')      return tentCardHTML(g);
+        if (g.category === '寝袋・マット') return sleepingBagCardHTML(g);
+        return gearCardHTML(g);
+    }).join('');
 }
 
 function tentCardHTML(g) {
@@ -1487,6 +1581,34 @@ function gearCardHTML(g) {
             <div class="gear-maker">${esc(g.maker)}</div>
             <span class="tag">${esc(g.category)}</span>
             <span class="gear-storage">📍 ${esc(g.storage)}</span>
+        </div>
+        <div class="gear-card-actions">
+            <button class="gear-edit-btn" onclick="event.stopPropagation();showEditGear('${g.id}')" title="編集">✏️</button>
+            <span class="gear-arrow">›</span>
+        </div>
+    </div>`;
+}
+
+function sleepingBagTagPills(tags) {
+    return (tags||[]).map(t=>{
+        const d = SLEEPING_BAG_TAG_DEF[t]; if (!d) return '';
+        return `<span class="tent-tag-pill" style="background:${d.bg};color:${d.color};">${d.label}</span>`;
+    }).join('');
+}
+
+function sleepingBagCardHTML(g) {
+    const tagPills  = sleepingBagTagPills(g.sleepingBagTags);
+    const tempRange = (g.specs||{})['快適温度'] || '';
+    return `
+    <div class="gear-card" onclick="showGearDetail('${g.id}')">
+        <div class="gear-emoji">${esc(g.emoji||'🛌')}</div>
+        <div class="gear-info" style="flex:1;min-width:0;">
+            <div class="gear-name">${esc(g.name)}</div>
+            <div class="gear-maker">${esc(g.maker||'')}</div>
+            ${g.tagline?`<div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.4;">${esc(g.tagline)}</div>`:''}
+            ${tempRange?`<div style="font-size:12px;color:var(--text-muted);margin-top:3px;">🌡️ ${esc(tempRange)}</div>`:''}
+            ${tagPills?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tagPills}</div>`:''}
+            <span class="gear-storage" style="margin-top:4px;display:block;">📍 ${esc(g.storage)}</span>
         </div>
         <div class="gear-card-actions">
             <button class="gear-edit-btn" onclick="event.stopPropagation();showEditGear('${g.id}')" title="編集">✏️</button>
@@ -1574,6 +1696,7 @@ function buildStandardDetail(g) {
             <button class="btn-detail-delete" onclick="confirmDeleteGear('${g.id}')">🗑️ 削除</button>
         </div>
         ${g.tagline?`<div class="detail-section"><div class="detail-section-title">💬 説明</div><div class="features-text">${esc(g.tagline)}</div></div>`:''}
+        ${g.category==='寝袋・マット' && (g.sleepingBagTags||[]).length ? `<div class="detail-section"><div class="detail-section-title">🏷️ タグ</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${sleepingBagTagPills(g.sleepingBagTags)}</div></div>` : ''}
         <div class="detail-section">
             <div class="detail-section-title">📋 基本情報</div>
             <div class="info-row"><span class="info-label">収納場所</span><span class="info-value">📍 ${esc(g.storage)}</span></div>
@@ -1634,10 +1757,12 @@ function cancelEdit() {
 }
 
 function buildGearForm(g) {
-    const isTent = g ? g.category==='テント' : false;
-    const selGradient = g ? (g.photoGradient||GRADIENT_PRESETS[0].value) : GRADIENT_PRESETS[0].value;
-    const selDiff     = g ? (g.setupDifficulty||3) : 3;
-    const selTags     = g ? (g.tentTags||[]) : [];
+    const isTent        = g ? g.category==='テント'      : false;
+    const isSleepingBag = g ? g.category==='寝袋・マット' : false;
+    const selGradient   = g ? (g.photoGradient||GRADIENT_PRESETS[0].value) : GRADIENT_PRESETS[0].value;
+    const selDiff       = g ? (g.setupDifficulty||3) : 3;
+    const selTags       = g ? (g.tentTags||[]) : [];
+    const selSbTags     = g ? (g.sleepingBagTags||[]) : [];
     editingVideos = g ? JSON.parse(JSON.stringify(g.videos||[])) : [];
 
     // Build gradient preset circles
@@ -1651,9 +1776,16 @@ function buildGearForm(g) {
         <button type="button" class="diff-star${n<=selDiff?' active':''}" id="ds-${n}"
                 onclick="selectDiff(${n})">★</button>`).join('');
 
-    // Build tag checkboxes
+    // Build tag checkboxes (tent)
     const tagCheckHTML = Object.entries(TENT_TAG_DEF).map(([k,d])=>`
         <div class="tag-check-item${selTags.includes(k)?' on':''}" id="tc-${k}"
+             onclick="toggleTagCheck('${k}')">
+            ${d.label}
+        </div>`).join('');
+
+    // Build sleeping bag tag checkboxes
+    const sbTagCheckHTML = Object.entries(SLEEPING_BAG_TAG_DEF).map(([k,d])=>`
+        <div class="tag-check-item${selSbTags.includes(k)?' on':''}" id="tc-${k}"
              onclick="toggleTagCheck('${k}')">
             ${d.label}
         </div>`).join('');
@@ -1714,6 +1846,14 @@ function buildGearForm(g) {
             <div class="form-field">
                 <label class="form-label">タグ（複数選択可）</label>
                 <div class="tag-check-grid">${tagCheckHTML}</div>
+            </div>
+        </div>
+
+        <!-- 寝袋専用 -->
+        <div class="form-section" id="f-sleeping-bag-section" style="display:${isSleepingBag?'block':'none'};">
+            <div class="form-section-title">🛌 寝袋タグ（複数選択可）</div>
+            <div class="form-field">
+                <div class="tag-check-grid">${sbTagCheckHTML}</div>
             </div>
         </div>
 
@@ -1786,10 +1926,12 @@ function buildGearForm(g) {
 }
 
 function onCategoryChange() {
-    const cat = document.getElementById('f-category').value;
-    const isTent = cat === 'テント';
-    document.getElementById('f-tent-section').style.display   = isTent ? 'block' : 'none';
-    document.getElementById('f-features-field').style.display = isTent ? 'block' : 'none';
+    const cat           = document.getElementById('f-category').value;
+    const isTent        = cat === 'テント';
+    const isSleepingBag = cat === '寝袋・マット';
+    document.getElementById('f-tent-section').style.display          = isTent        ? 'block' : 'none';
+    document.getElementById('f-features-field').style.display        = isTent        ? 'block' : 'none';
+    document.getElementById('f-sleeping-bag-section').style.display  = isSleepingBag ? 'block' : 'none';
 }
 
 function setEmoji(e) {
@@ -1815,6 +1957,13 @@ function toggleTagCheck(key) {
 
 function getSelectedTentTags() {
     return Object.keys(TENT_TAG_DEF).filter(k=>{
+        const el = document.getElementById('tc-'+k);
+        return el && el.classList.contains('on');
+    });
+}
+
+function getSelectedSleepingBagTags() {
+    return Object.keys(SLEEPING_BAG_TAG_DEF).filter(k=>{
         const el = document.getElementById('tc-'+k);
         return el && el.classList.contains('on');
     });
@@ -1853,6 +2002,8 @@ function submitGearForm() {
         data.recommendedPeople= (document.getElementById('f-people').value||'').trim();
         data.photoGradient    = document.getElementById('f-gradient').value;
         data.tentTags         = getSelectedTentTags();
+    } else if (category === '寝袋・マット') {
+        data.sleepingBagTags  = getSelectedSleepingBagTags();
     }
 
     if (editingId) {
@@ -2354,6 +2505,7 @@ function showToast(msg) {
 // ============================================================
 document.addEventListener('DOMContentLoaded', ()=>{
     gears   = loadGears();
+    migrateGears();
     saveGears();
     manuals = loadManuals();
     saveManuals();
