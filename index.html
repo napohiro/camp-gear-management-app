@@ -587,14 +587,67 @@
         .area-item-arrow { color:var(--text-muted); font-size:16px; margin-left:auto; }
 
         /* ===== GARAGE FLOORPLAN ===== */
-        .garage-floorplan-wrap { position:relative; cursor:pointer; border-radius:10px; overflow:hidden; background:var(--bg); min-height:80px; display:flex; flex-direction:column; }
-        .garage-floorplan-img { width:100%; max-height:300px; object-fit:contain; display:block; border-radius:10px; }
-        .garage-floorplan-hint { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); color:#fff; font-size:11px; padding:3px 8px; border-radius:99px; pointer-events:none; }
-        .garage-floorplan-placeholder { min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--text-muted); font-size:13px; background:var(--bg); border-radius:10px; padding:20px; gap:8px; }
-        .floorplan-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9900; align-items:center; justify-content:center; padding:16px; flex-direction:column; }
+        /* カードコンテナ */
+        .garage-floorplan-card {
+            background:var(--bg-card); border-radius:16px; overflow:hidden;
+            margin-bottom:14px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border);
+        }
+        .garage-floorplan-header {
+            font-size:13px; font-weight:700; color:var(--text-primary);
+            padding:12px 14px 8px; letter-spacing:0.2px;
+        }
+        /* 画像ラッパー（オーバーレイ拡張用の基点） */
+        .garage-floorplan-wrap {
+            position:relative; cursor:pointer; background:var(--bg); min-height:80px;
+            /* position:relative にすることで overlay-layer の絶対配置が機能する */
+        }
+        /* 平面図本体 — object-fit:contain で縦長でも全体表示 */
+        .garage-floorplan-img {
+            width:100%; display:block; object-fit:contain; background:var(--bg);
+        }
+        /* 将来の棚ラベルなどのオーバーレイ用レイヤー（拡張ポイント）
+           例: <div class="floorplan-area-pin" style="left:30%;top:25%">棚A</div> */
+        .floorplan-overlay-layer {
+            position:absolute; inset:0; pointer-events:none;
+        }
+        /* エリアピン（将来 buildGarageMap() 側から追加する用） */
+        .floorplan-area-pin {
+            position:absolute; transform:translate(-50%,-50%);
+            background:rgba(61,44,30,0.85); color:#fff; font-size:10px; font-weight:700;
+            padding:3px 8px; border-radius:99px; pointer-events:auto; cursor:pointer;
+            white-space:nowrap; box-shadow:0 1px 4px rgba(0,0,0,0.4);
+        }
+        /* タップヒント */
+        .garage-floorplan-hint {
+            position:absolute; bottom:8px; right:8px;
+            background:rgba(0,0,0,0.5); color:#fff; font-size:11px;
+            padding:3px 8px; border-radius:99px; pointer-events:none;
+        }
+        /* 画像読み込み失敗時のプレースホルダー */
+        .garage-floorplan-placeholder {
+            min-height:120px; display:flex; flex-direction:column; align-items:center;
+            justify-content:center; text-align:center; color:var(--text-muted);
+            font-size:13px; background:var(--bg); padding:24px; gap:8px;
+        }
+        /* ライトボックスモーダル */
+        .floorplan-modal {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92);
+            z-index:9900; align-items:center; justify-content:center; padding:16px;
+        }
         .floorplan-modal.open { display:flex; }
-        .floorplan-modal-img { max-width:100%; max-height:calc(100vh - 70px); object-fit:contain; border-radius:12px; display:block; }
-        .floorplan-modal-close { margin-top:14px; color:#fff; font-size:14px; opacity:0.8; padding:8px 24px; border:1px solid rgba(255,255,255,0.4); border-radius:99px; cursor:pointer; }
+        .floorplan-modal-img {
+            max-width:100%; max-height:100vh; object-fit:contain;
+            border-radius:8px; display:block;
+        }
+        /* ✕ 閉じるボタン（右上固定） */
+        .floorplan-modal-close-btn {
+            position:fixed;
+            top:max(16px, env(safe-area-inset-top, 16px)); right:16px; z-index:9901;
+            background:rgba(0,0,0,0.65); border:1.5px solid rgba(255,255,255,0.4);
+            color:#fff; font-size:18px; width:44px; height:44px; border-radius:50%;
+            cursor:pointer; font-family:inherit; display:flex;
+            align-items:center; justify-content:center; line-height:1;
+        }
 
         /* ===== TRIP INFO CARD ===== */
         .trip-field-row { display:flex; align-items:flex-start; gap:10px; }
@@ -992,27 +1045,40 @@
 
 <!-- ==============================  GARAGE MAP  ============================== -->
 <div class="screen" id="screen-garage">
-    <div class="card" style="background:linear-gradient(135deg,#3D2C1E,#7A6B4A);color:white;border:none;margin-bottom:14px;">
-        <div style="font-size:16px;font-weight:700;margin-bottom:5px;">🏠 ガレージ収納マップ</div>
-        <div style="font-size:13px;opacity:0.85;">エリアをタップすると収納中のギアが表示されます</div>
-    </div>
-    <!-- ガレージ平面図 -->
-    <div class="card" style="margin-bottom:14px;padding:12px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">🗺 ガレージ平面図</div>
-        <div class="garage-floorplan-wrap" onclick="openFloorplan()" id="garage-floorplan-wrap">
-            <img src="public/garage-map.jpg" alt="ガレージ平面図" class="garage-floorplan-img"
-                 onerror="this.closest('.garage-floorplan-wrap').innerHTML='<div class=\'garage-floorplan-placeholder\'>📷 平面図画像が見つかりません<br><small style=\'opacity:0.7\'>public/garage-map.jpg を追加してください</small></div>'">
+
+    <!-- ── ガレージ平面図（最上部）── -->
+    <!--
+        [拡張ガイド] 将来 #floorplan-overlay-layer に下記のように
+        buildGarageMap() や別関数からピンを動的追加できます:
+          <div class="floorplan-area-pin" style="left:28%;top:22%"
+               onclick="openGarageArea('g-shelf-a')">棚A</div>
+    -->
+    <div class="garage-floorplan-card" id="garage-floorplan-card">
+        <div class="garage-floorplan-header">🏠 ガレージ平面図</div>
+        <div class="garage-floorplan-wrap" id="garage-floorplan-wrap" onclick="openFloorplan()">
+            <img src="public/icon/heimenzu.jpeg"
+                 alt="ガレージ平面図"
+                 class="garage-floorplan-img"
+                 id="garage-floorplan-img"
+                 onerror="this.closest('.garage-floorplan-wrap').innerHTML='<div class=\'garage-floorplan-placeholder\'>📷 平面図を読み込めませんでした<br><small style=\'opacity:0.7\'>public/icon/heimenzu.jpeg</small></div><div class=\'garage-floorplan-hint\'>🔍 タップで拡大</div>'">
+            <!-- 将来のエリアオーバーレイ（棚A・棚B・右奥 等を重ねて表示する拡張用レイヤー） -->
+            <div class="floorplan-overlay-layer" id="floorplan-overlay-layer"></div>
             <div class="garage-floorplan-hint">🔍 タップで拡大</div>
         </div>
+        <div style="font-size:11px;color:var(--text-muted);padding:8px 14px 10px;text-align:right;">
+            エリアをタップすると収納ギアを確認できます
+        </div>
     </div>
+
+    <!-- ── 収納エリアグリッド＆一覧 ── -->
     <div class="card" style="margin-bottom:14px;" id="garage-map-visual"></div>
     <div id="garage-areas"></div>
 </div>
 
-<!-- Floorplan Lightbox Modal -->
-<div id="floorplan-modal" class="floorplan-modal" onclick="closeFloorplan()">
-    <img src="public/garage-map.jpg" alt="ガレージ平面図" class="floorplan-modal-img">
-    <div class="floorplan-modal-close">✕ 閉じる</div>
+<!-- ======== ガレージ平面図 ライトボックス ======== -->
+<div id="floorplan-modal" class="floorplan-modal" onclick="if(event.target===this)closeFloorplan()">
+    <button class="floorplan-modal-close-btn" onclick="closeFloorplan()">✕</button>
+    <img src="public/icon/heimenzu.jpeg" alt="ガレージ平面図" class="floorplan-modal-img">
 </div>
 
 <!-- BOTTOM NAV -->
