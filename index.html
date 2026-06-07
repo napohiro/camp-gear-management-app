@@ -989,13 +989,14 @@ const CAT_MIGRATION_MAP = {
 };
 
 const DEFAULT_CATEGORIES = [
-    { id:'cat_tent',   name:'テント',   icon:'⛺', bg:'#F5F0E8', border:'#C8B896', text:'#6B5340' },
-    { id:'cat_sleep',  name:'寝具',     icon:'🛏️', bg:'#EAF5EB', border:'#90C89A', text:'#2A6A40' },
-    { id:'cat_cook',   name:'調理関連', icon:'🍳', bg:'#FAF5EC', border:'#D4C09A', text:'#6B5540' },
-    { id:'cat_fire',   name:'焚き火',   icon:'🔥', bg:'#FFF0E6', border:'#E8B48A', text:'#8B4A28' },
-    { id:'cat_light',  name:'照明',     icon:'💡', bg:'#FFFBE6', border:'#E8D870', text:'#7A6B20' },
-    { id:'cat_living', name:'リビング', icon:'🪑', bg:'#EEF3E8', border:'#B4C8A0', text:'#486B38' },
-    { id:'cat_other',  name:'その他',   icon:'📦', bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' },
+    { id:'cat_tent',   name:'テント',       icon:'⛺', bg:'#F5F0E8', border:'#C8B896', text:'#6B5340' },
+    { id:'cat_sleep',  name:'寝具',         icon:'🛏️', bg:'#EAF5EB', border:'#90C89A', text:'#2A6A40' },
+    { id:'cat_cook',   name:'調理関連',     icon:'🍳', bg:'#FAF5EC', border:'#D4C09A', text:'#6B5540' },
+    { id:'cat_fire',   name:'焚き火',       icon:'🔥', bg:'#FFF0E6', border:'#E8B48A', text:'#8B4A28' },
+    { id:'cat_light',  name:'照明',         icon:'💡', bg:'#FFFBE6', border:'#E8D870', text:'#7A6B20' },
+    { id:'cat_living', name:'リビング',     icon:'🪑', bg:'#EEF3E8', border:'#B4C8A0', text:'#486B38' },
+    { id:'cat_pole',   name:'ポール/ロープ', icon:'🪢', bg:'#EEF0F8', border:'#A8B0D0', text:'#3A4A8A' },
+    { id:'cat_other',  name:'その他',       icon:'📦', bg:'#F2F2F0', border:'#C0C0BC', text:'#555550' },
 ];
 
 const GRADIENT_PRESETS = [
@@ -1252,11 +1253,35 @@ function migrateGears() {
 }
 
 function loadCategories() {
+    let cats;
     try {
         const raw = localStorage.getItem(CATEGORIES_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) cats = JSON.parse(raw);
     } catch(e) {}
-    return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+    if (!cats) return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+
+    // DEFAULT_CATEGORIESに追加されたが既存localStorageにない項目を挿入する
+    const catNames = new Set(cats.map(c => c.name));
+    let changed = false;
+    DEFAULT_CATEGORIES.forEach((defCat, defIdx) => {
+        if (catNames.has(defCat.name)) return;
+        // 次に存在するデフォルトカテゴリの直前に挿入
+        let insertBefore = -1;
+        for (let i = defIdx + 1; i < DEFAULT_CATEGORIES.length; i++) {
+            const pos = cats.findIndex(c => c.name === DEFAULT_CATEGORIES[i].name);
+            if (pos >= 0) { insertBefore = pos; break; }
+        }
+        const clone = JSON.parse(JSON.stringify(defCat));
+        if (insertBefore >= 0) {
+            cats.splice(insertBefore, 0, clone);
+        } else {
+            cats.push(clone);
+        }
+        catNames.add(defCat.name);
+        changed = true;
+    });
+    if (changed) localStorage.setItem(CATEGORIES_KEY, JSON.stringify(cats));
+    return cats;
 }
 
 function saveCategories() {
@@ -1861,10 +1886,15 @@ function deleteCat(idx) {
 // GEAR LIST
 // ============================================================
 function rebuildFilterBar() {
-    const usedCats = new Set(gears.map(g=>g.category).filter(Boolean));
-    // Show categories in defined order, only those with gears
-    const orderedCats = categories.map(c=>c.name).filter(n=>usedCats.has(n));
     const fb = document.getElementById('filter-bar');
+    if (!fb) return;
+    // デフォルト順を先に並べ、ユーザー追加カテゴリはその後に表示
+    const defaultNames = DEFAULT_CATEGORIES.map(c => c.name);
+    const allNames     = categories.map(c => c.name);
+    const orderedCats  = [
+        ...defaultNames.filter(n => allNames.includes(n)),
+        ...allNames.filter(n => !defaultNames.includes(n)),
+    ];
 
     const chip = (cat, icon, label, count) => {
         const isActive = filterCat === cat;
