@@ -1457,8 +1457,20 @@ function openVideoUrl(url) {
 
 function getYtId(url) {
     if (!url) return null;
-    const m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-    return m ? m[1] : null;
+    try {
+        const u = new URL(url.trim());
+        if (u.hostname.includes('youtu.be')) {
+            return u.pathname.split('/').filter(Boolean)[0] || null;
+        }
+        if (u.hostname.includes('youtube.com')) {
+            if (u.pathname === '/watch') return u.searchParams.get('v');
+            if (u.pathname.startsWith('/shorts/')) return u.pathname.split('/').filter(Boolean)[1] || null;
+            if (u.pathname.startsWith('/embed/'))  return u.pathname.split('/').filter(Boolean)[1] || null;
+        }
+        return null;
+    } catch(e) {
+        return null;
+    }
 }
 
 function getYtThumb(url) {
@@ -1522,16 +1534,24 @@ function _videoCardHTML(gearId, idx, v, total) {
 
 function _videoFormHTML(gearId, idx, v) {
     const isNew = idx === -1;
+    const existingUrl = v ? v.url : '';
+    const existingId = getYtId(existingUrl);
+    const thumbStyle = existingId ? '' : 'display:none;';
+    const thumbSrc   = existingId ? 'https://img.youtube.com/vi/' + existingId + '/hqdefault.jpg' : '';
+    const initStatus = existingId ? '<span style="color:#5a8a5a;">✓ URL確認OK</span>' : '';
     return `<div class="video-inline-form">
         <div class="vif-field">
             <label class="vif-label">YouTube URL</label>
-            <input class="form-input" type="url" id="vf-url" value="${esc(v ? v.url : '')}" placeholder="https://www.youtube.com/watch?v=...">
+            <input class="form-input" type="url" id="vf-url" value="${esc(existingUrl)}" placeholder="https://www.youtube.com/watch?v=..." oninput="onVideoUrlInput()">
+            <div id="vf-thumb-preview" style="${thumbStyle}margin-top:8px;">
+                <img id="vf-thumb-img" src="${esc(thumbSrc)}" alt="" style="width:120px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" onerror="this.parentElement.style.display='none';">
+            </div>
             <button class="btn-yt-fetch" type="button" onclick="fetchYtTitle()">🔍 タイトル取得</button>
-            <div class="vif-title-status" id="vf-title-status"></div>
+            <div class="vif-title-status" id="vf-title-status">${initStatus}</div>
         </div>
         <div class="vif-field">
             <label class="vif-label">動画タイトル</label>
-            <input class="form-input" type="text" id="vf-title" value="${esc(v ? v.title : '')}" placeholder="YouTubeのタイトルをコピーして貼り付けてください">
+            <input class="form-input" type="text" id="vf-title" value="${esc(v ? v.title : '')}" placeholder="空欄でも保存できます（「YouTube動画」で保存されます）">
         </div>
         <div class="vif-field" style="margin-bottom:0;">
             <label class="vif-label">メモ</label>
@@ -1544,27 +1564,46 @@ function _videoFormHTML(gearId, idx, v) {
     </div>`;
 }
 
+function onVideoUrlInput() {
+    const urlInput   = document.getElementById('vf-url');
+    const statusEl   = document.getElementById('vf-title-status');
+    const previewDiv = document.getElementById('vf-thumb-preview');
+    const thumbImg   = document.getElementById('vf-thumb-img');
+    if (!urlInput) return;
+    const id = getYtId(urlInput.value);
+    if (id) {
+        if (previewDiv) { previewDiv.style.display = ''; }
+        if (thumbImg)   { thumbImg.src = 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg'; }
+        if (statusEl)   { statusEl.innerHTML = '<span style="color:#5a8a5a;">✓ URL確認OK</span>'; }
+    } else {
+        if (previewDiv) { previewDiv.style.display = 'none'; }
+        if (thumbImg)   { thumbImg.src = ''; }
+        if (statusEl && urlInput.value.trim()) {
+            statusEl.innerHTML = '<span style="color:var(--danger);">URLが正しくありません</span>';
+        } else if (statusEl) {
+            statusEl.innerHTML = '';
+        }
+    }
+}
+
 async function fetchYtTitle() {
-    const urlInput = document.getElementById('vf-url');
+    const urlInput   = document.getElementById('vf-url');
     const titleInput = document.getElementById('vf-title');
-    const statusEl = document.getElementById('vf-title-status');
+    const statusEl   = document.getElementById('vf-title-status');
     if (!urlInput || !titleInput || !statusEl) return;
 
     const url = urlInput.value.trim();
     if (!url) {
-        statusEl.textContent = 'YouTube URLを入力してください';
-        statusEl.style.color = 'var(--danger)';
+        statusEl.innerHTML = '<span style="color:var(--danger);">YouTube URLを入力してください</span>';
         return;
     }
     const id = getYtId(url);
     if (!id) {
-        statusEl.textContent = 'URLが正しくありません。YouTube動画のURLを貼り付けてください';
-        statusEl.style.color = 'var(--danger)';
+        statusEl.innerHTML = '<span style="color:var(--danger);">URLが正しくありません。YouTube動画のURLを貼り付けてください</span>';
         return;
     }
 
-    statusEl.textContent = '取得中...';
-    statusEl.style.color = 'var(--text-muted)';
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">取得中...</span>';
 
     try {
         const resp = await fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json');
@@ -1572,14 +1611,12 @@ async function fetchYtTitle() {
         const data = await resp.json();
         if (data && data.title) {
             titleInput.value = data.title;
-            statusEl.textContent = '✓ タイトルを取得しました（編集できます）';
-            statusEl.style.color = '#5a8a5a';
+            statusEl.innerHTML = '<span style="color:#5a8a5a;">✓ タイトルを取得しました（編集できます）</span>';
         } else {
             throw new Error('no title');
         }
     } catch {
-        statusEl.textContent = '自動取得できませんでした。YouTubeの動画タイトルをコピーして貼り付けてください';
-        statusEl.style.color = 'var(--danger)';
+        statusEl.innerHTML = '<span style="color:var(--danger);">タイトルを取得できませんでした。YouTubeのタイトルをコピーして貼り付けてください</span>';
     }
 }
 
@@ -1591,10 +1628,11 @@ function saveVideoEdit(gearId, idx) {
     const url   = (document.getElementById('vf-url')?.value   || '').trim();
     const memo  = (document.getElementById('vf-memo')?.value  || '').trim();
     if (!title && !url && !memo) { showToast('タイトルまたはURLを入力してください'); return; }
+    const savedTitle = title || 'YouTube動画';
     if (idx === -1) {
-        g.videos.push({ title, url, memo, addedAt: Date.now() });
+        g.videos.push({ title: savedTitle, url, memo, addedAt: Date.now() });
     } else {
-        g.videos[idx] = { ...(g.videos[idx] || {}), title, url, memo };
+        g.videos[idx] = { ...(g.videos[idx] || {}), title: savedTitle, url, memo };
     }
     saveGears();
     renderVideoMgmt(gearId);
