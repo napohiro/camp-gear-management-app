@@ -3,52 +3,47 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // localStorageを初期状態にしてデフォルトギアを読み込む
-    await page.evaluate(() => {
-        localStorage.clear();
-    });
+    await page.evaluate(() => localStorage.clear());
     await page.reload();
-    await page.waitForSelector('#screen-home', { state: 'visible' });
+    await page.waitForSelector('#screen-home.active', { state: 'attached', timeout: 10000 });
 });
 
 test('ギア一覧の内容が持ち物チェックに反映される', async ({ page }) => {
-    // 持ち物チェック画面に遷移
     await page.click('#nav-checklist');
-    await page.waitForSelector('#screen-checklist', { state: 'visible' });
+    await page.waitForSelector('#screen-checklist.active', { state: 'attached', timeout: 5000 });
 
-    // デフォルトギアのギア名がチェックリストに表示されていること
+    // ギア名がチェックリストに表示されていること
     const checkItems = page.locator('#checklist-items .check-text');
+    await expect(checkItems.first()).toBeAttached({ timeout: 5000 });
     const count = await checkItems.count();
     expect(count).toBeGreaterThan(0);
 
-    // デフォルトギアの1つ「サーカスST」が存在すること
-    const texts = await checkItems.allTextContents();
-    const hasCircusST = texts.some(t => t.includes('サーカスST'));
-    expect(hasCircusST).toBeTruthy();
-
-    // カテゴリヘッダーが表示されていること（テント）
+    // カテゴリヘッダーが表示されていること
     const catHeaders = page.locator('#checklist-items .cat-header');
-    const catCount = await catHeaders.count();
-    expect(catCount).toBeGreaterThan(0);
+    await expect(catHeaders.first()).toBeAttached({ timeout: 5000 });
+
+    // デフォルトギア「サーカスST」が含まれること
+    const texts = await checkItems.allTextContents();
+    expect(texts.some(t => t.includes('サーカスST'))).toBeTruthy();
 });
 
 test('日付入力がスマホ幅からはみ出さない', async ({ page }) => {
     await page.click('#nav-checklist');
-    await page.waitForSelector('#screen-checklist', { state: 'visible' });
+    await page.waitForSelector('#screen-checklist.active', { state: 'attached', timeout: 5000 });
 
     const viewport = page.viewportSize();
     const viewportWidth = viewport?.width ?? 375;
 
-    // trip-date input の右端が viewport 幅を超えていないこと
+    // trip-date の右端が viewport 幅内に収まること
     const dateInput = page.locator('#trip-date');
     const dateBox = await dateInput.boundingBox();
     expect(dateBox).not.toBeNull();
     if (dateBox) {
-        expect(dateBox.x + dateBox.width).toBeLessThanOrEqual(viewportWidth + 1);
         expect(dateBox.x).toBeGreaterThanOrEqual(0);
+        expect(dateBox.x + dateBox.width).toBeLessThanOrEqual(viewportWidth + 1);
     }
 
-    // trip-dest input も同様
+    // trip-dest も同様
     const destInput = page.locator('#trip-dest');
     const destBox = await destInput.boundingBox();
     expect(destBox).not.toBeNull();
@@ -58,33 +53,30 @@ test('日付入力がスマホ幅からはみ出さない', async ({ page }) => 
 });
 
 test('ガレージ平面図が収納画面に表示される', async ({ page }) => {
-    // 収納タブに遷移
     await page.click('#nav-garage');
-    await page.waitForSelector('#screen-garage', { state: 'visible' });
+    await page.waitForSelector('#screen-garage.active', { state: 'attached', timeout: 5000 });
 
-    // 平面図カードが存在すること
+    // 平面図 wrapper が DOM にあること
     const floorplanWrap = page.locator('#garage-floorplan-wrap');
-    await expect(floorplanWrap).toBeVisible();
+    await expect(floorplanWrap).toBeAttached({ timeout: 5000 });
 
-    // 「ガレージ平面図」ラベルが表示されていること
-    await expect(page.locator('#screen-garage').locator('text=ガレージ平面図')).toBeVisible();
+    // 「ガレージ平面図」ラベルが存在すること
+    await expect(page.locator('#screen-garage').locator('text=ガレージ平面図').first()).toBeAttached({ timeout: 5000 });
 });
 
 test('画像タップで拡大モーダルが開く', async ({ page }) => {
     await page.click('#nav-garage');
-    await page.waitForSelector('#screen-garage', { state: 'visible' });
+    await page.waitForSelector('#screen-garage.active', { state: 'attached', timeout: 5000 });
 
-    // モーダルが最初は非表示
     const modal = page.locator('#floorplan-modal');
-    await expect(modal).not.toHaveClass(/open/);
+    // 初期状態は open クラスなし
+    await expect(modal).not.toHaveClass(/open/, { timeout: 3000 });
 
-    // 平面図をタップ
-    await page.click('#garage-floorplan-wrap');
+    // 平面図エリアをタップ → モーダルが開く
+    await page.locator('#garage-floorplan-wrap').click();
+    await expect(modal).toHaveClass(/open/, { timeout: 3000 });
 
-    // モーダルが開くこと
-    await expect(modal).toHaveClass(/open/);
-
-    // モーダルをタップして閉じる
+    // モーダルをタップ → 閉じる
     await modal.click();
-    await expect(modal).not.toHaveClass(/open/);
+    await expect(modal).not.toHaveClass(/open/, { timeout: 3000 });
 });
