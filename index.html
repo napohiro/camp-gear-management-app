@@ -451,6 +451,24 @@
         .pdf-inline-form .vif-field { margin-bottom:12px; }
         .pdf-inline-form .vif-field:last-of-type { margin-bottom:0; }
         .pdf-inline-form .vif-label { display:block; font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:5px; }
+        /* PDF upload button in gear edit form */
+        .f-pdf-upload-btn {
+            width:100%; background:var(--bg-card); border:2px dashed var(--border);
+            border-radius:10px; padding:12px; font-size:13px; font-weight:700;
+            color:var(--text-secondary); cursor:pointer; font-family:inherit;
+            display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px;
+            transition:all 0.15s;
+        }
+        .f-pdf-upload-btn:active { background:var(--bg); border-color:var(--accent-brown); color:var(--accent-brown); }
+        .f-pdf-current {
+            background:var(--green-bg); border:1px solid var(--green-border);
+            border-radius:10px; padding:10px 12px; margin-bottom:10px;
+            display:flex; align-items:center; gap:8px;
+        }
+        .f-pdf-current-name {
+            font-size:13px; font-weight:700; color:var(--green-text);
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;
+        }
 
         /* ===== CHECKLIST ===== */
         .check-progress { background:var(--bg-card); border-radius:16px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px var(--shadow); border:1px solid var(--border); }
@@ -1954,7 +1972,7 @@ function _gearMediaHTML(g) {
 }
 
 function _gearPdfBadge(g) {
-    const hasPdf = !!(g.pdf || manuals.some(m => m.gearName === g.name && m.pdfPath));
+    const hasPdf = !!(g.pdfData || g.pdfUrl || g.pdf || manuals.some(m => m.gearName === g.name && m.pdfPath));
     return hasPdf ? `<span class="pdf-badge">📄 取説</span>` : '';
 }
 
@@ -2313,13 +2331,45 @@ function buildGearForm(g) {
             </div>
         </div>
 
-        <!-- 参照 -->
+        <!-- 取説PDF -->
         <div class="form-section">
-            <div class="form-section-title">📎 参照</div>
-            <div class="form-field">
-                <label class="form-label" for="f-pdf">取説PDF名</label>
-                <input class="form-input" type="text" id="f-pdf" placeholder="例：SnowPeak_Vault_manual.pdf" value="${esc(g?g.pdf:'')}">
-            </div>
+            <div class="form-section-title">📄 取説PDF</div>
+            ${(()=>{
+                const _pdfData = g ? (g.pdfData || '') : '';
+                const _pdfName = g ? (g.pdfName || '') : '';
+                const _pdfUrl  = g ? (g.pdfUrl  || '') : '';
+                const _pdfText = g ? (g.pdf     || '') : '';
+                const _pdfUpd  = g ? (g.pdfUpdatedAt || '') : '';
+                const _currentBlock = _pdfData
+                    ? `<div class="f-pdf-current" id="f-pdf-current-block">
+                        <span style="font-size:20px;">📄</span>
+                        <span class="f-pdf-current-name">${esc(_pdfName || _pdfText || '取扱説明書.pdf')}</span>
+                        <button type="button" class="pmgmt-btn pmgmt-del" style="flex-shrink:0;" onclick="clearFormPDF()">削除</button>
+                       </div>`
+                    : `<div id="f-pdf-current-block" style="display:none;"></div>`;
+                return `
+                <input type="hidden" id="f-pdf-data"       value="${esc(_pdfData)}">
+                <input type="hidden" id="f-pdf-name"       value="${esc(_pdfName)}">
+                <input type="hidden" id="f-pdf-updated-at" value="${esc(String(_pdfUpd))}">
+                ${_currentBlock}
+                <div class="form-field">
+                    <label class="form-label">PDFファイルを選択</label>
+                    <input type="file" id="f-pdf-file" accept="application/pdf,.pdf" style="display:none;" onchange="handlePDFUpload(this)">
+                    <button type="button" class="f-pdf-upload-btn" onclick="document.getElementById('f-pdf-file').click()">
+                        📁 ファイルを選ぶ（DropboxやiCloud Driveも可）
+                    </button>
+                    <div id="f-pdf-file-status" style="font-size:12px;margin-top:5px;min-height:16px;line-height:1.4;"></div>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">またはPDF共有URLを入力</label>
+                    <input class="form-input" type="url" id="f-pdf-url" placeholder="https://www.dropbox.com/..." value="${esc(_pdfUrl)}">
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Dropbox・GoogleドライブなどのリンクURLを貼り付けてください</div>
+                </div>
+                <div class="form-field" style="margin-bottom:0;">
+                    <label class="form-label" for="f-pdf">取説PDF名・メモ（任意）</label>
+                    <input class="form-input" type="text" id="f-pdf" placeholder="例：SnowPeak_Vault_manual.pdf" value="${esc(_pdfText)}">
+                </div>`;
+            })()}
         </div>
 
         <!-- 動画メモ -->
@@ -2386,6 +2436,59 @@ function removeGearImage() {
     if (fi) fi.value = '';
 }
 
+function handlePDFUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const statusEl  = document.getElementById('f-pdf-file-status');
+    const sizeInMB  = file.size / (1024 * 1024);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('f-pdf-data').value       = e.target.result;
+        document.getElementById('f-pdf-name').value       = file.name;
+        document.getElementById('f-pdf-updated-at').value = Date.now().toString();
+
+        // 登録済みPDF表示ブロックを更新
+        const block = document.getElementById('f-pdf-current-block');
+        if (block) {
+            block.style.display = '';
+            block.innerHTML = '<span style="font-size:20px;">📄</span>'
+                + '<span class="f-pdf-current-name">' + esc(file.name) + '</span>'
+                + '<button type="button" class="pmgmt-btn pmgmt-del" style="flex-shrink:0;" onclick="clearFormPDF()">削除</button>';
+        }
+
+        // PDF名フィールドが空なら自動入力
+        const pdfTextField = document.getElementById('f-pdf');
+        if (pdfTextField && !pdfTextField.value) {
+            pdfTextField.value = file.name.replace(/\.pdf$/i, '').replace(/_/g, ' ');
+        }
+
+        if (sizeInMB > 10) {
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger);">⚠️ PDFの容量が大きいため、保存できない場合があります。Dropboxの共有リンク登録も検討してください。（' + sizeInMB.toFixed(1) + 'MB）</span>';
+        } else if (sizeInMB > 5) {
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--warn-text);">⚠️ PDFの容量が大きいため、保存できない場合があります。Dropboxの共有リンク登録も検討してください。（' + sizeInMB.toFixed(1) + 'MB）</span>';
+        } else {
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--green-text);">✓ ' + esc(file.name) + '（' + sizeInMB.toFixed(1) + 'MB）を選択しました</span>';
+        }
+    };
+    reader.onerror = function() {
+        if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger);">読み込みに失敗しました</span>';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearFormPDF() {
+    document.getElementById('f-pdf-data').value       = '';
+    document.getElementById('f-pdf-name').value       = '';
+    document.getElementById('f-pdf-updated-at').value = '';
+    const block = document.getElementById('f-pdf-current-block');
+    if (block) { block.style.display = 'none'; block.innerHTML = ''; }
+    const fileInput = document.getElementById('f-pdf-file');
+    if (fileInput) fileInput.value = '';
+    const statusEl = document.getElementById('f-pdf-file-status');
+    if (statusEl) statusEl.innerHTML = '';
+}
+
 function setEmoji(e) {
     document.getElementById('f-emoji').value = e;
 }
@@ -2444,6 +2547,10 @@ function submitGearForm() {
         storageMethod:  (document.getElementById('f-storage-method').value||'').trim(),
         caution:        (document.getElementById('f-caution').value||'').trim(),
         pdf:            (document.getElementById('f-pdf').value||'').trim(),
+        pdfData:        document.getElementById('f-pdf-data')?.value || '',
+        pdfName:        document.getElementById('f-pdf-name')?.value || '',
+        pdfUrl:         (document.getElementById('f-pdf-url')?.value||'').trim(),
+        pdfUpdatedAt:   parseInt(document.getElementById('f-pdf-updated-at')?.value||'0') || (original?.pdfUpdatedAt||null),
         videos:         collectVideoEntries(),
         specs:          original ? (original.specs||{}) : {},
     };
@@ -2543,16 +2650,77 @@ function getPDFPath(g) {
 
 // ギア詳細画面の「取扱説明書」行
 function pdfRowHTML(g) {
+    // 優先1: アップロード済みPDFファイル
+    if (g.pdfData) {
+        const name = esc(g.pdfName || g.pdf || '取扱説明書.pdf');
+        return `<div>
+            <div class="info-row">
+                <span class="info-label">取扱説明書</span>
+                <span class="info-value">📄 ${name}</span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;padding-bottom:4px;flex-wrap:wrap;">
+                <button class="vmgmt-btn vmgmt-watch" onclick="openGearPDF('${esc(g.id)}')">📖 PDFを見る</button>
+                <button class="vmgmt-btn" style="color:var(--danger);border-color:rgba(204,42,42,0.22);" onclick="deleteGearPDF('${esc(g.id)}')">削除</button>
+            </div>
+        </div>`;
+    }
+    // 優先2: Dropbox共有リンクなどURL
+    if (g.pdfUrl) {
+        const name = esc(g.pdfName || g.pdf || g.pdfUrl);
+        return `<div>
+            <div class="info-row">
+                <span class="info-label">取扱説明書</span>
+                <span class="info-value" style="color:var(--accent-brown);">🔗 ${name}</span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;padding-bottom:4px;flex-wrap:wrap;">
+                <button class="vmgmt-btn vmgmt-watch" onclick="openGearPDF('${esc(g.id)}')">📖 PDFを見る</button>
+                <button class="vmgmt-btn" style="color:var(--danger);border-color:rgba(204,42,42,0.22);" onclick="deleteGearPDF('${esc(g.id)}')">削除</button>
+            </div>
+        </div>`;
+    }
+    // 優先3: 旧来のpdfPath（manuals registryやローカルファイル）
     const path = getPDFPath(g);
-    if (!path && !g.pdf) return '';
     if (path) {
         return `<div class="info-row" style="cursor:pointer;" onclick="openPDF('${path}')">` +
                `<span class="info-label">取扱説明書</span>` +
                `<span class="info-value" style="color:var(--accent-brown);text-decoration:underline;">` +
                `📗 ${esc(g.pdf || '取扱説明書を開く')}</span></div>`;
     }
-    return `<div class="info-row"><span class="info-label">取扱説明書</span>` +
-           `<span class="info-value" style="color:var(--text-muted);font-style:italic;">📋 未登録</span></div>`;
+    // 優先4: テキスト名のみ
+    if (g.pdf) {
+        return `<div class="info-row"><span class="info-label">取扱説明書</span>` +
+               `<span class="info-value" style="color:var(--text-muted);">📋 ${esc(g.pdf)}</span></div>`;
+    }
+    return '';
+}
+
+function openGearPDF(gearId) {
+    const g = gears.find(x => x.id === gearId);
+    if (!g) return;
+    if (g.pdfData) {
+        const w = window.open();
+        if (w) {
+            w.document.write('<!DOCTYPE html><html><head><title>' + esc(g.pdfName || '取扱説明書') + '</title><style>body{margin:0;}iframe{width:100%;height:100vh;border:none;}</style></head><body><iframe src="' + g.pdfData + '"></iframe></body></html>');
+            w.document.close();
+        }
+        return;
+    }
+    if (g.pdfUrl) { window.open(g.pdfUrl, '_blank', 'noopener'); return; }
+    const path = getPDFPath(g);
+    if (path) window.open(path, '_blank', 'noopener');
+}
+
+function deleteGearPDF(gearId) {
+    const g = gears.find(x => x.id === gearId);
+    if (!g) return;
+    if (!confirm('このギアのPDFを削除しますか？\n\nこの操作は元に戻せません。')) return;
+    g.pdfData      = '';
+    g.pdfName      = '';
+    g.pdfUrl       = '';
+    g.pdfUpdatedAt = null;
+    saveGears();
+    showGearDetail(gearId);
+    showToast('PDFを削除しました');
 }
 
 // ============================================================
