@@ -478,24 +478,59 @@
             display:block; margin-bottom:6px; border:1px solid var(--border);
             cursor:pointer;
         }
+        /* ===== IMAGE VIEWER ===== */
         .img-viewer-overlay {
             position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.92);
             display:flex; align-items:center; justify-content:center; padding:16px;
         }
-        .img-viewer-inner {
-            display:flex; flex-direction:column; align-items:center; gap:12px; max-width:100%;
+        .img-viewer-close-btn {
+            position:fixed; top:max(16px, env(safe-area-inset-top)); left:16px; z-index:10000;
+            background:rgba(0,0,0,0.65); border:1.5px solid rgba(255,255,255,0.4);
+            color:#fff; font-size:18px; width:44px; height:44px; border-radius:50%;
+            cursor:pointer; font-family:inherit; display:flex; align-items:center;
+            justify-content:center; line-height:1;
         }
-        .img-viewer-img {
-            max-width:100%; max-height:80vh; object-fit:contain; border-radius:8px;
-        }
+        .img-viewer-inner { display:flex; flex-direction:column; align-items:center; gap:10px; max-width:100%; }
+        .img-viewer-img  { max-width:100%; max-height:82vh; object-fit:contain; border-radius:8px; }
         .img-viewer-title {
-            color:#fff; font-size:14px; font-weight:700; max-width:90vw;
+            color:rgba(255,255,255,0.7); font-size:12px; max-width:90vw;
             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;
         }
-        .img-viewer-close {
-            background:rgba(255,255,255,0.18); border:none; color:#fff; font-size:14px;
-            font-weight:700; border-radius:20px; padding:8px 24px; cursor:pointer;
-            font-family:inherit;
+
+        /* ===== PDF VIEWER ===== */
+        .pdf-viewer-modal { display:none; position:fixed; inset:0; z-index:9800; background:#222; flex-direction:column; }
+        .pdf-viewer-modal.open { display:flex; }
+        .pdf-viewer-header {
+            background:#3D2C1E; display:flex; align-items:center; gap:10px;
+            padding:12px 16px; padding-top:calc(12px + env(safe-area-inset-top,0px)); flex-shrink:0;
+        }
+        .pdf-back-btn {
+            background:none; border:none; color:#fff; font-size:15px; font-weight:700;
+            padding:6px 0; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;
+        }
+        .pdf-viewer-title {
+            color:rgba(255,255,255,0.9); font-size:14px; font-weight:600; flex:1; min-width:0;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        }
+        .pdf-viewer-frame { flex:1; border:none; width:100%; background:#fff; }
+
+        /* ===== EXTERNAL URL MODAL ===== */
+        .ext-url-modal { display:none; position:fixed; inset:0; z-index:9900; background:rgba(0,0,0,0.55); align-items:flex-end; justify-content:center; }
+        .ext-url-modal.open { display:flex; }
+        .ext-url-sheet {
+            background:var(--bg-card); border-radius:20px 20px 0 0;
+            padding:22px 20px; padding-bottom:calc(22px + env(safe-area-inset-bottom,0px));
+            width:100%; max-width:430px;
+        }
+        .ext-url-proceed-btn {
+            width:100%; padding:14px; background:var(--accent-brown); color:#fff;
+            border:none; border-radius:14px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; margin-bottom:10px; display:block;
+        }
+        .ext-url-cancel-btn {
+            width:100%; padding:12px; background:var(--bg); color:var(--text-secondary);
+            border:1.5px solid var(--border); border-radius:14px; font-size:15px;
+            font-weight:700; cursor:pointer; font-family:inherit; display:block;
         }
 
         /* ===== CHECKLIST ===== */
@@ -987,6 +1022,28 @@
     <div class="nav-item"        id="nav-checklist"  onclick="navTo('checklist')"> <span class="nav-icon">✅</span><span class="nav-label">チェック</span></div>
     <div class="nav-item"        id="nav-pdf-list"   onclick="navTo('pdf-list')">  <span class="nav-icon">📄</span><span class="nav-label">取説</span>    </div>
     <div class="nav-item"        id="nav-garage"     onclick="navTo('garage')">    <span class="nav-icon">🏠</span><span class="nav-label">収納</span>    </div>
+</div>
+
+<!-- ======== PDF VIEWER MODAL ======== -->
+<div id="pdf-viewer-modal" class="pdf-viewer-modal">
+    <div class="pdf-viewer-header">
+        <button class="pdf-back-btn" onclick="closePDFViewer()">← 戻る</button>
+        <div class="pdf-viewer-title" id="pdf-viewer-title">取扱説明書</div>
+    </div>
+    <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" src="" title="PDF" allow="fullscreen"></iframe>
+</div>
+
+<!-- ======== EXTERNAL URL MODAL ======== -->
+<div id="ext-url-modal" class="ext-url-modal" onclick="if(event.target===this)closeExtUrlModal()">
+    <div class="ext-url-sheet">
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">外部サービスへ移動します</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.7;">
+            閲覧後は <strong style="color:var(--text-primary);">← アプリへ戻る</strong><br>
+            iPhoneはタブを閉じるか、ブラウザの「戻る」をタップ
+        </div>
+        <button class="ext-url-proceed-btn" onclick="proceedExtUrl()">開く</button>
+        <button class="ext-url-cancel-btn" onclick="closeExtUrlModal()">キャンセル</button>
+    </div>
 </div>
 
 <div id="toast"></div>
@@ -2798,10 +2855,64 @@ function resetToDefaults() {
 }
 
 // ============================================================
+// PDF / IMAGE / EXTERNAL URL VIEWERS
+// ============================================================
+
+let _pdfBlobUrl = null;
+let _pendingExtUrl = '';
+
+function openPDFViewer(src, title) {
+    const modal = document.getElementById('pdf-viewer-modal');
+    const frame = document.getElementById('pdf-viewer-frame');
+    document.getElementById('pdf-viewer-title').textContent = title || '取扱説明書';
+    // data URL → blob URL に変換（モバイルブラウザでの互換性向上）
+    if (src && src.startsWith('data:')) {
+        try {
+            const arr  = src.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            const u8   = new Uint8Array(bstr.length);
+            for (let i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
+            _pdfBlobUrl = URL.createObjectURL(new Blob([u8], { type: mime }));
+            frame.src = _pdfBlobUrl;
+        } catch(e) { frame.src = src; }
+    } else {
+        frame.src = src || '';
+    }
+    modal.classList.add('open');
+    // スクロールを止める
+    document.body.style.overflow = 'hidden';
+}
+
+function closePDFViewer() {
+    document.getElementById('pdf-viewer-frame').src = '';
+    document.getElementById('pdf-viewer-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    if (_pdfBlobUrl) { URL.revokeObjectURL(_pdfBlobUrl); _pdfBlobUrl = null; }
+}
+
+function openExtUrl(url) {
+    if (!url) return;
+    _pendingExtUrl = url;
+    document.getElementById('ext-url-modal').classList.add('open');
+}
+
+function proceedExtUrl() {
+    closeExtUrlModal();
+    if (_pendingExtUrl) { window.open(_pendingExtUrl, '_blank', 'noopener'); }
+    _pendingExtUrl = '';
+}
+
+function closeExtUrlModal() {
+    document.getElementById('ext-url-modal').classList.remove('open');
+    _pendingExtUrl = '';
+}
+
+// ============================================================
 // PDF LIST
 // ============================================================
-function openPDF(path) {
-    window.open(path, '_blank', 'noopener');
+function openPDF(path, title) {
+    openPDFViewer(path, title || '取扱説明書');
 }
 
 // manuals.js の MANUALS_REGISTRY を参照して PDF パスを返す。
@@ -2891,7 +3002,7 @@ function pdfRowHTML(g) {
     // 優先5: 旧pdfPath
     const path = getPDFPath(g);
     if (path) {
-        return `<div class="info-row" style="cursor:pointer;" onclick="openPDF('${path}')">` +
+        return `<div class="info-row" style="cursor:pointer;" onclick="openPDF('${path}','${esc(g.name)} 取扱説明書')">` +
                `<span class="info-label">取説・画像メモ</span>` +
                `<span class="info-value" style="color:var(--accent-brown);text-decoration:underline;">` +
                `📗 ${esc(g.pdf || '取扱説明書を開く')}</span></div>`;
@@ -2908,17 +3019,10 @@ function pdfRowHTML(g) {
 function openGearPDF(gearId) {
     const g = gears.find(x => x.id === gearId);
     if (!g) return;
-    if (g.pdfData) {
-        const w = window.open();
-        if (w) {
-            w.document.write('<!DOCTYPE html><html><head><title>' + esc(g.pdfName || '取扱説明書') + '</title><style>body{margin:0;}iframe{width:100%;height:100vh;border:none;}</style></head><body><iframe src="' + g.pdfData + '"></iframe></body></html>');
-            w.document.close();
-        }
-        return;
-    }
-    if (g.pdfUrl) { window.open(g.pdfUrl, '_blank', 'noopener'); return; }
+    if (g.pdfData) { openPDFViewer(g.pdfData, g.pdfName || g.name + ' 取扱説明書'); return; }
+    if (g.pdfUrl)  { openExtUrl(g.pdfUrl); return; }
     const path = getPDFPath(g);
-    if (path) window.open(path, '_blank', 'noopener');
+    if (path) openPDFViewer(path, g.name + ' 取扱説明書');
 }
 
 function deleteGearPDF(gearId) {
@@ -2932,10 +3036,11 @@ function deleteGearPDF(gearId) {
 function openImageViewer(src, title) {
     const ov = document.createElement('div');
     ov.className = 'img-viewer-overlay';
-    ov.innerHTML = '<div class="img-viewer-inner">'
-        + '<div class="img-viewer-title">' + esc(title || '画像') + '</div>'
+    ov.innerHTML =
+        '<button class="img-viewer-close-btn" onclick="this.closest(\'.img-viewer-overlay\').remove()">✕</button>'
+        + '<div class="img-viewer-inner">'
         + '<img src="' + src + '" class="img-viewer-img" alt="">'
-        + '<button class="img-viewer-close" onclick="this.closest(\'.img-viewer-overlay\').remove()">✕ 閉じる</button>'
+        + (title ? '<div class="img-viewer-title">' + esc(title) + '</div>' : '')
         + '</div>';
     ov.addEventListener('click', function(e) { if (e.target === ov) ov.remove(); });
     document.body.appendChild(ov);
@@ -2949,16 +3054,12 @@ function openGearManual(gearId) {
         if (isImage) {
             openImageViewer(g.manualFileData, g.manualFileName || g.manualMemo || '画像');
         } else {
-            const w = window.open();
-            if (w) {
-                w.document.write('<!DOCTYPE html><html><head><title>' + esc(g.manualFileName || '取扱説明書') + '</title><style>body{margin:0;}iframe{width:100%;height:100vh;border:none;}</style></head><body><iframe src="' + g.manualFileData + '"></iframe></body></html>');
-                w.document.close();
-            }
+            openPDFViewer(g.manualFileData, g.manualFileName || g.manualMemo || g.name + ' 取扱説明書');
         }
         return;
     }
     const url = g.manualUrl || g.pdfUrl;
-    if (url) window.open(url, '_blank', 'noopener');
+    if (url) openExtUrl(url);
 }
 
 function deleteGearManual(gearId) {
@@ -3030,7 +3131,7 @@ function _pdfCardHTML(m, idx) {
         ? `<span class="pdf-status-badge registered">✓ PDF登録済み</span>`
         : `<span class="pdf-status-badge unregistered">未登録</span>`;
     const openBtn  = hasPdf
-        ? `<button class="pdf-btn" onclick="openPDF('${esc(m.pdfPath)}')">開く</button>`
+        ? `<button class="pdf-btn" onclick="openPDF('${esc(m.pdfPath)}','${esc(m.gearName)} 取扱説明書')">開く</button>`
         : `<button class="pdf-btn" style="opacity:0.35;cursor:default;" disabled>未登録</button>`;
     return `<div class="pdf-mgmt-card" id="pcard-${idx}">
         <div class="pdf-icon" style="font-size:28px;min-width:34px;text-align:center;">${hasPdf ? '📗' : '📋'}</div>
