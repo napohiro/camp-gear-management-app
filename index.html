@@ -551,6 +551,22 @@
         .area-item-meta  { font-size:12px; color:var(--text-muted); }
         .area-item-arrow { color:var(--text-muted); font-size:16px; margin-left:auto; }
 
+        /* ===== GARAGE FLOORPLAN ===== */
+        .garage-floorplan-wrap { position:relative; cursor:pointer; border-radius:10px; overflow:hidden; background:var(--bg); }
+        .garage-floorplan-img { width:100%; max-height:300px; object-fit:contain; display:block; border-radius:10px; }
+        .garage-floorplan-hint { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); color:#fff; font-size:11px; padding:3px 8px; border-radius:99px; pointer-events:none; }
+        .garage-floorplan-placeholder { min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--text-muted); font-size:13px; background:var(--bg); border-radius:10px; padding:20px; gap:8px; }
+        .floorplan-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9900; align-items:center; justify-content:center; padding:16px; flex-direction:column; }
+        .floorplan-modal.open { display:flex; }
+        .floorplan-modal-img { max-width:100%; max-height:calc(100vh - 70px); object-fit:contain; border-radius:12px; display:block; }
+        .floorplan-modal-close { margin-top:14px; color:#fff; font-size:14px; opacity:0.8; padding:8px 24px; border:1px solid rgba(255,255,255,0.4); border-radius:99px; cursor:pointer; }
+
+        /* ===== TRIP INFO CARD ===== */
+        .trip-field-row { display:flex; align-items:flex-start; gap:10px; }
+        .trip-field-icon { font-size:18px; margin-top:24px; flex-shrink:0; }
+        .trip-field-body { flex:1; min-width:0; }
+        .trip-label { display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:4px; }
+
         /* ===== GEAR EDIT FORM ===== */
         .form-section {
             background:var(--bg-card); border-radius:16px; padding:18px;
@@ -903,15 +919,23 @@
 
 <!-- ==============================  CHECKLIST  ============================== -->
 <div class="screen" id="screen-checklist">
-    <div class="card" style="margin-bottom:14px;padding:16px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:12px;">🗓 キャンプ情報</div>
-        <div style="margin-bottom:10px;">
-            <label style="display:block;font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:5px;" for="trip-date">キャンプ日</label>
-            <input class="form-input" type="date" id="trip-date" oninput="saveTripField('date',this.value)" style="width:100%;box-sizing:border-box;">
-        </div>
-        <div>
-            <label style="display:block;font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:5px;" for="trip-dest">行き先</label>
-            <input class="form-input" type="text" id="trip-dest" placeholder="例：波戸岬キャンプ場" oninput="saveTripField('destination',this.value)" style="width:100%;box-sizing:border-box;">
+    <div class="card" style="margin-bottom:14px;padding:14px 16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:14px;">🗓 キャンプ情報</div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div class="trip-field-row" style="flex:1;min-width:0;">
+                <span class="trip-field-icon">📅</span>
+                <div class="trip-field-body">
+                    <label class="trip-label" for="trip-date">キャンプ日</label>
+                    <input class="form-input" type="date" id="trip-date" oninput="saveTripField('date',this.value)" style="width:100%;box-sizing:border-box;min-width:0;font-size:14px;">
+                </div>
+            </div>
+            <div class="trip-field-row" style="flex:1;min-width:0;">
+                <span class="trip-field-icon">📍</span>
+                <div class="trip-field-body">
+                    <label class="trip-label" for="trip-dest">行き先</label>
+                    <input class="form-input" type="text" id="trip-dest" placeholder="例：波戸岬" oninput="saveTripField('destination',this.value)" style="width:100%;box-sizing:border-box;min-width:0;font-size:14px;">
+                </div>
+            </div>
         </div>
     </div>
     <div class="check-progress">
@@ -937,8 +961,23 @@
         <div style="font-size:16px;font-weight:700;margin-bottom:5px;">🏠 ガレージ収納マップ</div>
         <div style="font-size:13px;opacity:0.85;">エリアをタップすると収納中のギアが表示されます</div>
     </div>
+    <!-- ガレージ平面図 -->
+    <div class="card" style="margin-bottom:14px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">🗺 ガレージ平面図</div>
+        <div class="garage-floorplan-wrap" onclick="openFloorplan()" id="garage-floorplan-wrap">
+            <img src="public/garage-map.jpg" alt="ガレージ平面図" class="garage-floorplan-img"
+                 onerror="this.closest('.garage-floorplan-wrap').innerHTML='<div class=\'garage-floorplan-placeholder\'>📷 平面図画像が見つかりません<br><small style=\'opacity:0.7\'>public/garage-map.jpg を追加してください</small></div>'">
+            <div class="garage-floorplan-hint">🔍 タップで拡大</div>
+        </div>
+    </div>
     <div class="card" style="margin-bottom:14px;" id="garage-map-visual"></div>
     <div id="garage-areas"></div>
+</div>
+
+<!-- Floorplan Lightbox Modal -->
+<div id="floorplan-modal" class="floorplan-modal" onclick="closeFloorplan()">
+    <img src="public/garage-map.jpg" alt="ガレージ平面図" class="floorplan-modal-img">
+    <div class="floorplan-modal-close">✕ 閉じる</div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1884,6 +1923,7 @@ function saveCatEdit(idx) {
     initCatMaps();
     rebuildFilterBar();
     renderGearList();
+    buildChecklist();
     buildCatManager(null);
     showToast(idx === -1 ? 'カテゴリを追加しました' : 'カテゴリを更新しました');
 }
@@ -1906,6 +1946,7 @@ function deleteCat(idx) {
     initCatMaps();
     rebuildFilterBar();
     renderGearList();
+    buildChecklist();
     buildCatManager(null);
     showToast('カテゴリを削除しました');
 }
@@ -2208,6 +2249,7 @@ function confirmDeleteGear(id) {
     rebuildFilterBar();
     renderGearList();
     buildHome();
+    buildChecklist();
     buildPDFList();
     buildGarageMap();
     updateHomeStats();
@@ -2710,6 +2752,7 @@ function submitGearForm() {
     buildHome();
     buildPDFList();
     buildGarageMap();
+    buildChecklist();
     updateHomeStats();
     cancelEdit();
 }
@@ -2727,6 +2770,7 @@ function deleteGearFromForm() {
     buildHome();
     buildPDFList();
     buildGarageMap();
+    buildChecklist();
     updateHomeStats();
     // Go back two levels (edit form -> detail/list)
     historyStack.pop();
@@ -2748,6 +2792,7 @@ function resetToDefaults() {
     buildHome();
     buildPDFList();
     buildGarageMap();
+    buildChecklist();
     updateHomeStats();
     showToast('デモデータに戻しました');
 }
@@ -3090,18 +3135,48 @@ function deletePDFEntry(idx) {
 // CHECKLIST
 // ============================================================
 function buildChecklist() {
-    document.getElementById('checklist-items').innerHTML = CHECKLIST.map((cat,ci)=>`
-        <div>
-            <div class="cat-header">${cat.cat}</div>
-            ${cat.items.map((item,ii)=>{
-                const key     = `${ci}-${ii}`;
+    // カテゴリ順にギアをグループ化
+    const catOrder = categories.map(c => c.name);
+    const catGroups = {};
+    catOrder.forEach(n => { catGroups[n] = []; });
+
+    gears.forEach(g => {
+        const cat = g.category || 'その他';
+        if (!catGroups[cat]) catGroups[cat] = [];
+        catGroups[cat].push(g);
+    });
+
+    // カテゴリアイコンマップ
+    const catIconMap = {};
+    categories.forEach(c => { catIconMap[c.name] = c.icon || '📦'; });
+
+    let html = '';
+    catOrder.forEach(catName => {
+        const items = catGroups[catName];
+        if (!items || !items.length) return;
+        const icon = catIconMap[catName] || '📦';
+        html += `<div>
+            <div class="cat-header">${icon} ${esc(catName)}</div>
+            ${items.map(g => {
+                const key = 'gear-' + g.id;
                 const checked = !!checkState[key];
                 return `<div class="check-item${checked?' checked':''}" id="ci-${key}" onclick="toggleCheck('${key}')">
                     <div class="check-box">${checked?'✓':''}</div>
-                    <span class="check-text">${esc(item)}</span>
+                    <span class="check-text">${esc(g.name)}<span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${esc(g.maker||'')}</span></span>
                 </div>`;
             }).join('')}
-        </div>`).join('');
+        </div>`;
+    });
+
+    if (!html) {
+        html = `<div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+            <div style="font-size:40px;margin-bottom:12px;">🎒</div>
+            <div style="font-size:15px;font-weight:700;">ギアが登録されていません</div>
+            <div style="font-size:13px;margin-top:8px;">ギア一覧からギアを追加すると<br>ここに表示されます</div>
+        </div>`;
+    }
+
+    document.getElementById('checklist-items').innerHTML = html;
     updateProgress();
 }
 
@@ -3116,8 +3191,8 @@ function toggleCheck(key) {
 }
 
 function updateProgress() {
-    let total=0, done=0;
-    CHECKLIST.forEach((cat,ci)=>{ cat.items.forEach((_,ii)=>{ total++; if(checkState[`${ci}-${ii}`]) done++; }); });
+    let total = gears.length, done = 0;
+    gears.forEach(g => { if (checkState['gear-' + g.id]) done++; });
     const pct = total ? Math.round((done/total)*100) : 0;
     document.getElementById('check-pct').textContent   = pct+'%';
     document.getElementById('check-sub').textContent   = `${done} / ${total} チェック済`;
@@ -3318,6 +3393,13 @@ function buildGarageMap() {
 }
 
 function toggleArea(id) { document.getElementById(id).classList.toggle('expanded'); }
+
+function openFloorplan() {
+    document.getElementById('floorplan-modal').classList.add('open');
+}
+function closeFloorplan() {
+    document.getElementById('floorplan-modal').classList.remove('open');
+}
 
 function openGarageArea(id) {
     const el = document.getElementById(id);

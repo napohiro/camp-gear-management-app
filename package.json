@@ -1,0 +1,12 @@
+{
+  "name": "camp-gear-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "serve": "npx serve . -p 3333"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}
