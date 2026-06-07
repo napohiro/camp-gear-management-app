@@ -621,35 +621,35 @@
 
         /* ===== VIDEO MANAGEMENT (detail view CRUD) ===== */
         .video-mgmt-card {
-            background:var(--bg); border-radius:14px; padding:12px;
-            margin-bottom:10px; border:1px solid var(--border);
-            display:flex; gap:10px; align-items:flex-start;
+            background:var(--bg); border-radius:14px;
+            margin-bottom:12px; border:1px solid var(--border);
+            overflow:hidden;
         }
         .video-thumb-wrap {
-            flex-shrink:0; width:90px; height:51px; border-radius:8px;
-            overflow:hidden; background:#1A1A2E;
+            width:100%; aspect-ratio:16/9;
+            background:#1A1A2E;
             display:flex; align-items:center; justify-content:center; position:relative;
+            overflow:hidden;
         }
         .video-thumb { width:100%; height:100%; object-fit:cover; display:block; }
-        .video-thumb-none { font-size:24px; line-height:1; }
+        .video-thumb-none { font-size:48px; line-height:1; }
         .video-play-overlay {
             position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-            background:rgba(0,0,0,0.35); color:white; font-size:20px;
+            background:rgba(0,0,0,0.3); color:white; font-size:40px;
             opacity:0; transition:opacity 0.15s; pointer-events:none;
         }
         .video-thumb-wrap:active .video-play-overlay { opacity:1; }
-        .video-card-body { flex:1; min-width:0; overflow:hidden; }
+        .video-card-body { padding:10px 12px 12px; }
         .video-card-title {
-            font-size:13px; font-weight:700; color:var(--text-primary);
-            line-height:1.4; margin-bottom:4px;
-            overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+            font-size:14px; font-weight:700; color:var(--text-primary);
+            line-height:1.45; margin-bottom:5px;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
         }
         .video-card-memo {
-            font-size:11px; color:var(--text-muted); line-height:1.5;
-            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-            margin-bottom:3px;
+            font-size:12px; color:var(--text-muted); line-height:1.55;
+            display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+            margin-bottom:8px;
         }
-        .video-card-date { font-size:10px; color:var(--text-muted); }
         .video-card-actions { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
         .video-move-row  { display:flex; gap:4px; }
         .video-action-row { display:flex; gap:4px; }
@@ -694,6 +694,23 @@
             transition:all 0.15s;
         }
         .video-mgmt-add-btn:active { background:var(--bg); border-color:var(--accent-brown); color:var(--accent-brown); }
+        /* YouTube title fetch button */
+        .btn-yt-fetch {
+            margin-top:6px; width:100%; background:var(--bg-card);
+            border:1.5px solid var(--border); border-radius:8px;
+            padding:9px 12px; font-size:13px; font-weight:700;
+            cursor:pointer; font-family:inherit; color:var(--text-secondary);
+            transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:5px;
+        }
+        .btn-yt-fetch:active { background:var(--border); }
+        .vif-title-status { font-size:11px; color:var(--text-muted); margin-top:5px; min-height:15px; line-height:1.4; }
+        /* Video card updated layout */
+        .video-card-url {
+            font-size:10px; color:var(--text-muted); margin-bottom:3px;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        }
+        .video-card-btns { display:flex; gap:6px; flex-wrap:wrap; }
+        .vmgmt-watch { color:var(--accent-brown) !important; border-color:rgba(139,90,43,0.3) !important; }
 
         /* Toast */
         #toast {
@@ -1478,35 +1495,26 @@ function renderVideoMgmt(gearId, editingIdx) {
 function _videoCardHTML(gearId, idx, v, total) {
     const thumb = getYtThumb(v.url);
     const hasUrl = !!v.url;
-    const urlData = hasUrl ? ' data-url="' + esc(v.url) + '" onclick="openVideoUrl(this.dataset.url)"' : '';
+    const urlAttr = hasUrl ? ' data-url="' + esc(v.url) + '"' : '';
     const thumbInner = thumb
         ? '<img class="video-thumb" src="' + esc(thumb) + '" alt="" loading="lazy"'
           + ' onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
           + '<div class="video-thumb-none" style="display:none;">🎬</div>'
         : '<div class="video-thumb-none">🎬</div>';
-    const dateStr = v.addedAt
-        ? new Date(v.addedAt).toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' })
-        : '';
     return `<div class="video-mgmt-card">
-        <div class="video-thumb-wrap"${urlData} style="${hasUrl ? 'cursor:pointer;' : ''}">
+        <div class="video-thumb-wrap"${hasUrl ? urlAttr + ' onclick="openVideoUrl(this.dataset.url)" style="cursor:pointer;"' : ''}>
             ${thumbInner}
             ${hasUrl ? '<div class="video-play-overlay">▶</div>' : ''}
         </div>
         <div class="video-card-body">
-            <div class="video-card-title"${urlData} style="${hasUrl ? 'cursor:pointer;color:var(--accent-brown);' : ''}">
-                ${esc(v.title || '（タイトルなし）')}
-            </div>
+            <div class="video-card-title">${esc(v.title || '（タイトルなし）')}</div>
             ${v.memo ? '<div class="video-card-memo">' + esc(v.memo) + '</div>' : ''}
-            ${dateStr ? '<div class="video-card-date">' + dateStr + '</div>' : ''}
-        </div>
-        <div class="video-card-actions">
-            <div class="video-move-row">
+            <div class="video-card-btns">
+                ${hasUrl ? '<button class="vmgmt-btn vmgmt-watch"' + urlAttr + ' onclick="openVideoUrl(this.dataset.url)">▶ 見る</button>' : ''}
+                <button class="vmgmt-btn" onclick="renderVideoMgmt('${gearId}',${idx})">編集</button>
+                <button class="vmgmt-btn vmgmt-del" onclick="deleteVideo('${gearId}',${idx})">削除</button>
                 <button class="vmgmt-btn" onclick="moveVideo('${gearId}',${idx},-1)" ${idx === 0 ? 'disabled' : ''} title="上へ">↑</button>
                 <button class="vmgmt-btn" onclick="moveVideo('${gearId}',${idx},1)" ${idx === total - 1 ? 'disabled' : ''} title="下へ">↓</button>
-            </div>
-            <div class="video-action-row">
-                <button class="vmgmt-btn" style="color:var(--accent-brown);" onclick="renderVideoMgmt('${gearId}',${idx})">編集</button>
-                <button class="vmgmt-btn vmgmt-del" onclick="deleteVideo('${gearId}',${idx})">削除</button>
             </div>
         </div>
     </div>`;
@@ -1516,12 +1524,14 @@ function _videoFormHTML(gearId, idx, v) {
     const isNew = idx === -1;
     return `<div class="video-inline-form">
         <div class="vif-field">
-            <label class="vif-label">タイトル</label>
-            <input class="form-input" type="text" id="vf-title" value="${esc(v ? v.title : '')}" placeholder="例：設営動画">
-        </div>
-        <div class="vif-field">
             <label class="vif-label">YouTube URL</label>
             <input class="form-input" type="url" id="vf-url" value="${esc(v ? v.url : '')}" placeholder="https://www.youtube.com/watch?v=...">
+            <button class="btn-yt-fetch" type="button" onclick="fetchYtTitle()">🔍 タイトル取得</button>
+            <div class="vif-title-status" id="vf-title-status"></div>
+        </div>
+        <div class="vif-field">
+            <label class="vif-label">動画タイトル</label>
+            <input class="form-input" type="text" id="vf-title" value="${esc(v ? v.title : '')}" placeholder="YouTubeのタイトルをコピーして貼り付けてください">
         </div>
         <div class="vif-field" style="margin-bottom:0;">
             <label class="vif-label">メモ</label>
@@ -1532,6 +1542,45 @@ function _videoFormHTML(gearId, idx, v) {
             <button class="btn-vm-cancel" onclick="renderVideoMgmt('${gearId}')">キャンセル</button>
         </div>
     </div>`;
+}
+
+async function fetchYtTitle() {
+    const urlInput = document.getElementById('vf-url');
+    const titleInput = document.getElementById('vf-title');
+    const statusEl = document.getElementById('vf-title-status');
+    if (!urlInput || !titleInput || !statusEl) return;
+
+    const url = urlInput.value.trim();
+    if (!url) {
+        statusEl.textContent = 'YouTube URLを入力してください';
+        statusEl.style.color = 'var(--danger)';
+        return;
+    }
+    const id = getYtId(url);
+    if (!id) {
+        statusEl.textContent = 'URLが正しくありません。YouTube動画のURLを貼り付けてください';
+        statusEl.style.color = 'var(--danger)';
+        return;
+    }
+
+    statusEl.textContent = '取得中...';
+    statusEl.style.color = 'var(--text-muted)';
+
+    try {
+        const resp = await fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json');
+        if (!resp.ok) throw new Error('not ok');
+        const data = await resp.json();
+        if (data && data.title) {
+            titleInput.value = data.title;
+            statusEl.textContent = '✓ タイトルを取得しました（編集できます）';
+            statusEl.style.color = '#5a8a5a';
+        } else {
+            throw new Error('no title');
+        }
+    } catch {
+        statusEl.textContent = '自動取得できませんでした。YouTubeの動画タイトルをコピーして貼り付けてください';
+        statusEl.style.color = 'var(--danger)';
+    }
 }
 
 function saveVideoEdit(gearId, idx) {
@@ -1557,7 +1606,7 @@ function deleteVideo(gearId, idx) {
     if (!g || !g.videos) return;
     const v = g.videos[idx];
     if (!v) return;
-    if (!confirm('「' + (v.title || 'この動画') + '」を削除しますか？\n\nこの操作は元に戻せません。')) return;
+    if (!confirm('この動画メモを削除しますか？\n\n「' + (v.title || 'タイトルなし') + '」\n\nこの操作は元に戻せません。')) return;
     g.videos.splice(idx, 1);
     saveGears();
     renderVideoMgmt(gearId);
