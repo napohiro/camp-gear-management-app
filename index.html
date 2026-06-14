@@ -871,9 +871,45 @@
             max-width:300px; text-align:center; pointer-events:none;
         }
         #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+        /* ===== FV OVERLAY ===== */
+        .fv-overlay {
+            position:fixed; top:0; left:0;
+            width:100%; height:100%;
+            z-index:9999;
+            cursor:pointer;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:flex-end;
+            overflow:hidden;
+        }
+        .fv-overlay.hidden { display:none; }
+        .fv-img {
+            position:absolute; top:0; left:0;
+            width:100%; height:100%;
+            object-fit:cover; object-position:center;
+            pointer-events:none;
+        }
+        .fv-btn {
+            position:relative; z-index:1;
+            margin-bottom:calc(52px + env(safe-area-inset-bottom));
+            background:rgba(255,255,255,0.92);
+            color:#3D2C1E;
+            border:none; border-radius:50px;
+            padding:16px 48px;
+            font-size:16px; font-weight:800;
+            letter-spacing:0.5px;
+            box-shadow:0 4px 24px rgba(0,0,0,0.35);
+            pointer-events:none;
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== FV OVERLAY ===== -->
+<div class="fv-overlay" id="fv-overlay" onclick="enterApp()">
+    <img src="public/fv.png" alt="CAMPギア管理アプリ" class="fv-img">
+    <div class="fv-btn">タップしてはじめる</div>
+</div>
 
 <!-- HEADER -->
 <div class="header">
@@ -1908,6 +1944,12 @@ const SCREEN_META = {
 };
 let historyStack = [];
 let currentScreen = 'home';
+
+function enterApp() {
+    document.getElementById('fv-overlay').classList.add('hidden');
+    document.querySelector('.bottom-nav').style.display = '';
+    navTo('home');
+}
 
 function navTo(name) {
     historyStack = [];
@@ -3586,6 +3628,7 @@ function showToast(msg) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', ()=>{
+    document.querySelector('.bottom-nav').style.display = 'none';
     categories = loadCategories();
     initCatMaps();
     gears      = loadGears();

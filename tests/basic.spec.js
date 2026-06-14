@@ -5,7 +5,10 @@ test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
-    await page.waitForSelector('#screen-home.active', { state: 'attached', timeout: 10000 });
+    // FVオーバーレイを閉じてアプリへ入る
+    await page.waitForSelector('#fv-overlay:not(.hidden)', { state: 'attached', timeout: 10000 });
+    await page.evaluate(() => enterApp());
+    await page.waitForSelector('#fv-overlay.hidden', { state: 'attached', timeout: 5000 });
 });
 
 test('ギア一覧の内容が持ち物チェックに反映される', async ({ page }) => {
@@ -76,7 +79,8 @@ test('画像タップで拡大モーダルが開く', async ({ page }) => {
     await page.locator('#garage-floorplan-wrap').click();
     await expect(modal).toHaveClass(/open/, { timeout: 3000 });
 
-    // モーダルをタップ → 閉じる
-    await modal.click();
+    // モーダル背景（左端）をタップ → 閉じる
+    const vp = page.viewportSize();
+    await page.mouse.click(5, (vp?.height ?? 812) / 2);
     await expect(modal).not.toHaveClass(/open/, { timeout: 3000 });
 });

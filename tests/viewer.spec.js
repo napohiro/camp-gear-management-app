@@ -8,7 +8,10 @@ test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
-    await page.waitForSelector('#screen-home.active', { state: 'attached', timeout: 10000 });
+    // FVオーバーレイを閉じてアプリへ入る
+    await page.waitForSelector('#fv-overlay:not(.hidden)', { state: 'attached', timeout: 10000 });
+    await page.evaluate(() => enterApp());
+    await page.waitForSelector('#fv-overlay.hidden', { state: 'attached', timeout: 5000 });
 });
 
 // ================================================================
